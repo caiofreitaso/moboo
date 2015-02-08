@@ -1,10 +1,10 @@
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
-LD_FLAGS := -std=c++0x
-CC_FLAGS := -std=c++0x -MMD
+LD_FLAGS := -std=c++0x -fopenmp
+CC_FLAGS := -std=c++0x -MMD  -fopenmp
 
 clear:
-	rm main obj/*
+	rm main debug obj/*
 
 all: debug main
 
