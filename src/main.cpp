@@ -33,70 +33,36 @@ int main(int argc, char const *argv[])
 			std::cout << i << ": " << state.resources[i].usable() << "\n";
 
 	std::cout << "----------------------------\n";
-
-	/*BuildOrder::Optimizer::Solution test;
-	for (unsigned i = 0; i < 3; i++)
-		test.orders.push_back(0);
-	test.orders.push_back(1);
-	test.orders.push_back(1);
-	for (unsigned i = 0; i < 11; i++)
-		test.orders.push_back(0);
-	test.orders.push_back(3);
-	test.orders.push_back(0);
-	test.orders.push_back(0);
-
-	test.update(state, 420);
-	print(test.orders);
-
-	std::cout << "Time: " << test.final_state.time << "\n";
-	std::cout << "Minerals: " << test.final_state.resources[0].usable() << "\n";
-	std::cout << "Zerglings: " << test.final_state.resources[6].usable() << "\n";*/
-
+	BuildOrder::Rules::prerequisites.print();
+	std::cout << "----------------------------\n";
+	BuildOrder::Rules::costs.print();
+	std::cout << "----------------------------\n";
+	BuildOrder::Rules::maxima.print();
+	std::cout << "----------------------------\n";
+	
 
 	std::vector<BuildOrder::Optimizer::Population> total;
 	BuildOrder::Optimizer::Population ret, front;
 	#ifdef OPT_NSGA2
 	BuildOrder::Optimizer::NSGA2 solver(5,100);
 	#else
-	BuildOrder::Optimizer::MOGRASP solver(100, 1, 1);
-	BuildOrder::Optimizer::MOGRASP bsolver(100, 1, 1);
+	BuildOrder::Optimizer::MOGRASP solver(15, 1, 1);
 	//BuildOrder::Optimizer::ExactOpt solver(1000);
-	//BuildOrder::Optimizer::ExactOpt bsolver(1000);
 	#endif
 
 	#ifdef ONESWAP
 	solver.neighborhood = BuildOrder::Optimizer::one_swap;
 	#else
-	solver.neighborhood = BuildOrder::Optimizer::swap_and_insert;
+	solver.neighborhood = BuildOrder::Optimizer::one_swap;//swap_and_delete;
 	#endif
 	
-	solver.maximum_time = 0;
+	solver.maximum_time = 300;
 	solver.objectives[0].set(0, BuildOrder::Optimizer::MAXIMIZE);
 //	solver.objectives[0].set(7, BuildOrder::Optimizer::MAXIMIZE);
 //	solver.objectives[0].set(6, BuildOrder::Optimizer::MAXIMIZE);
-	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,3));
-	
-	bsolver.neighborhood = BuildOrder::Optimizer::swap_and_insert;
-	bsolver.time_as_objective = false;
-	bsolver.maximum_time = 420;
-	bsolver.objectives[0].set(0, BuildOrder::Optimizer::MAXIMIZE);
-	bsolver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,3));
+	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,2));
+	solver.update();
 
-	front = bsolver.optimize(state, 10000);
-	for (unsigned i = 0; i < front.size(); i++)
-	{
-		std::cout << "\n" << (i+1) << "\n";
-		std::cout << "BUILD ORDER: ";
-		print(front[i].orders);
-
-		std::cout << "Time: " << front[i].final_state.time << "\n";
-		std::cout << "Minerals: " << front[i].final_state.resources[0].usable() << "\n";
-		std::cout << "Zerglings: " << front[i].final_state.resources[6].usable() << "\n";
-
-		std::cerr << front[i].final_state.time << " -" << front[i].final_state.resources[0].usable() << "\n";
-	}
-
-	front.clear();
 	std::chrono::time_point<std::chrono::system_clock> a;
 
 	for (unsigned i = 0; i < 1; i++)
@@ -105,7 +71,7 @@ int main(int argc, char const *argv[])
 		#ifdef OPT_NSGA2
 		total.push_back(solver.optimize(state, 10000));
 		#else
-		total.push_back(solver.optimize(state, 10000));
+		total.push_back(solver.optimize(state, 10));
 		#endif
 
 		std::chrono::duration<double> tt = std::chrono::system_clock::now() - a;

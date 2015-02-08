@@ -6,20 +6,16 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameS
 	
 	for (unsigned ii = 0; ii < iterations; ii++)
 	{
-		std::cout << ii << ": \t" << population.size() << "\n";
-
-		//#pragma omp parallel for num_threads(20)
+		#pragma omp parallel for num_threads(20)
 		for (unsigned i = 0; i < creation_cycles; i++)
 		{
 			Solution n = create(init,*this,1);
 			
-			make_valid(n, *this, init);
+			//make_valid(n, *this, init);
 
 			#pragma omp critical
 			population.insert(n);
 		}
-
-		std::cout << "\t" << population.size() << "\n";
 
 		unsigned old_size = 0;
 		unsigned count = 1;
@@ -40,8 +36,8 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameS
 					{
 						n[t].update(init, maximum_time);
 
-						trim(n[t], *this, init);
 						make_valid(n[t], *this, init);
+						trim(n[t], *this, init);
 
 						#pragma omp critical
 						neighbors.push_back(n[t]);
@@ -53,8 +49,6 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameS
 			if (old_size == population.size())
 				count--;
 		}
-
-		std::cout << "\t" << population.size() << "\n";
 	}
 
 	return population();

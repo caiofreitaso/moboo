@@ -114,7 +114,7 @@ void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState& i
 {
 	for (unsigned i = 0; i < Rules::events.size(); i++)
 	{
-		unsigned event = Rules::events[i];
+		Rules::Event& event = Rules::events[i];
 		EventList& events = init.resources[event.trigger].events;
 
 		if (events.size())
@@ -123,18 +123,98 @@ void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState& i
 	}
 }
 
+void BuildOrder::Objective::afterStack(std::vector<unsigned>& final, GameState& init)
+{
+	for (unsigned i = 0; i < final.size(); i++)
+		final[i] = init.resources[i].usable();
+
+	for (unsigned k = 0; k < init.tasks.size(); k++)
+	{
+		unsigned q = init.tasks[k].type;
+		Rules::Task& task = Rules::tasks[q];
+
+		for (unsigned p = 0; p < task.produce.row.size(); p++)
+		{
+			unsigned p_val = task.produce.row[p].value;
+			unsigned p_idx = task.produce.row[p].index;
+
+			final[p_idx] += p_val;
+		}
+
+		for (unsigned p = 0; p < task.consume.row.size(); p++)
+		{
+			unsigned p_val = task.consume.row[p].value;
+			unsigned p_idx = task.consume.row[p].index;
+
+			final[p_idx] -= p_val;
+		}
+
+		for (unsigned p = 0; p < task.borrow.row.size(); p++)
+		{
+			unsigned p_val = task.borrow.row[p].value;
+			unsigned p_idx = task.borrow.row[p].index;
+
+			final[p_idx] += p_val;
+		}
+	}
+}
+
+bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r, std::vector<unsigned>& final, unsigned t, GameState& init)
+{
+	std::vector<int> values(r.size(), 0);
+
+	for (unsigned i = 0; i < Rules::tasks[t].prerequisite.row.size(); i++)
+	{
+		int v = Rules::tasks[t].prerequisite.row[i].value;
+		unsigned index = Rules::tasks[t].prerequisite.row[i].index;
+
+		values[index] += v;
+	}
+
+	for (unsigned i = 0; i < Rules::tasks[t].costs.row.size(); i++)
+	{
+		int v = Rules::tasks[t].costs.row[i].value;
+		unsigned index = Rules::tasks[t].costs.row[i].index;
+		
+		values[index] += v;
+	}
+
+	for (unsigned i = 0; i < Rules::tasks[t].borrow.row.size(); i++)
+	{
+		int v = Rules::tasks[t].borrow.row[i].value;
+		unsigned index = Rules::tasks[t].borrow.row[i].index;
+		
+		values[index] += v;
+	}
+
+	for (unsigned i = 0; i < Rules::tasks[t].consume.row.size(); i++)
+	{
+		int v = Rules::tasks[t].consume.row[i].value;
+		unsigned index = Rules::tasks[t].consume.row[i].index;
+		
+		values[index] += v;
+	}
+
+	for (unsigned i = 0; i < values.size(); i++)
+		if (r[i])
+			if (final[i] < values[i] && values[i] > 0)
+				return false;
+
+	return true;
+}
+
 bool BuildOrder::Objective::possible(BuildOrder& build, GameState& init)
 {
 	std::vector<bool> should_I_Care(Rules::resources.size(),true);
+	std::vector<unsigned> final(Rules::resources.size(), 0);
 
 	unsigned task = build[0].task;
 
+	afterStack(final, init);
 	resourcesByEvents(should_I_Care, init);
 
-	for (unsigned i = 0; i < Rules::tasks[task].costs.row.size(); i++)
-	{
-		if ()
-	}
+	if (!prerequisiteInStack(should_I_Care, final, task, init))
+		return false;
 
 	return true;
 }
@@ -154,14 +234,14 @@ void BuildOrder::Objective::updateCosts(BuildOrder& build, GameState& init)
 	}
 }
 
-void BuildOrder::Objective::updateBurrow(BuildOrder& build, GameState& init)
+void BuildOrder::Objective::updateBorrow(BuildOrder& build, GameState& init)
 {
 	for (unsigned i = 0; i < Rules::tasks[build.front().task].borrow.row.size(); i++)
 	{
 		unsigned index = Rules::tasks[build.front().task].borrow.row[i].index;
 		unsigned value = Rules::tasks[build.front().task].borrow.row[i].value;
 
-		init.resources[index].burrowed += value;
+		init.resources[index].borrowed += value;
 	}
 }
 
@@ -174,7 +254,7 @@ void BuildOrder::Objective::buildWhatYouCan(BuildOrder& build, GameState& init, 
 			listTime.push_back( time_helper(init.tasks.size()-1, Rules::tasks[build.front().task].time) );
 
 			updateCosts(build, init);
-			updateBurrow(build, init);
+			updateBorrow(build, init);
 
 			pop(build);
 
@@ -210,7 +290,7 @@ void BuildOrder::Objective::aftermath(GameState& init, unsigned type)
 		unsigned index = Rules::tasks[type].borrow.row[k].index;
 		unsigned value = Rules::tasks[type].borrow.row[k].value;
 
-		init.resources[index].burrowed -= value;
+		init.resources[index].borrowed -= value;
 	}
 }
 
@@ -312,14 +392,23 @@ BuildOrder::GameState BuildOrder::makespan(GameState init, BuildOrder& original,
 	BuildOrder build(original);
 	Objective::remaining_list listTime;
 	unsigned last = 0;
+	unsigned last_size = 0;
 
 	while (build.size())
 	{
 		if (init.time >= maximum_time && maximum_time)
 			break;
 
+		if (last_size != build.size())
+		{
+			if (!Objective::possible(build, init))
+				break;
+			last_size = build.size();
+		}
+		
 		Objective::buildWhatYouCan(build, init, last, listTime);
 
+		
 		//CHECK MAXIMUM
 		/*
 			bool possible = true;

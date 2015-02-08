@@ -25,12 +25,13 @@ namespace BuildOrder
 
 		typedef std::vector<time_helper> remaining_list;
 
-		void prerequisiteInStack(std::vector<bool>&, unsigned, GameState&);
+		void afterStack(std::vector<unsigned>&, GameState&);
+		bool prerequisiteInStack(std::vector<bool>&, std::vector<unsigned>&, unsigned, GameState&);
 		void resourcesByEvents(std::vector<bool>&, GameState&);
 		bool possible(BuildOrder&, GameState&);
 
 		void updateCosts(BuildOrder&, GameState&);
-		void updateBurrow(BuildOrder&, GameState&);
+		void updateBorrow(BuildOrder&, GameState&);
 
 		void buildWhatYouCan(BuildOrder&, GameState&, unsigned& last, remaining_list& listTime);
 

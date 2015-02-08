@@ -21,7 +21,7 @@ void BuildOrder::createState(GameState& s)
 		for (unsigned i = 0; i < Rules::resources.size(); i++) {
 			s.resources[i].quantity = 0;
 			s.resources[i].used = 0;
-			s.resources[i].burrowed = 0;
+			s.resources[i].borrowed = 0;
 
 			s.resources[i].capacity = Rules::resources[i].overall_maximum > 0;
 		}

@@ -50,12 +50,12 @@ namespace BuildOrder
 	struct Resource {
 		unsigned quantity;
 		unsigned used;
-		unsigned burrowed;
+		unsigned borrowed;
 		EventList events;
 
 		bool capacity;
 
-		int usable() const { return (int)(quantity - used - burrowed); }
+		int usable() const { return (int)(quantity - used - borrowed); }
 	};
 
 	struct GameState {
@@ -64,7 +64,22 @@ namespace BuildOrder
 		std::vector<Resource> resources;
 		EventList tasks;
 
-		unsigned quantity(unsigned index) const {
+		bool hasPrerequisites(unsigned t) const
+		{
+			for (unsigned i = 0; i < Rules::tasks[t].prerequisite.row.size(); i++)
+			{
+				unsigned index = Rules::tasks[t].prerequisite.row[i].index;
+				unsigned value = Rules::tasks[t].prerequisite.row[i].value;
+
+				if (resources[index].usable() < value)
+					return false;
+			}
+
+			return true;
+		}
+
+		unsigned quantity(unsigned index) const
+		{
 			if (Rules::resources[index].overall_maximum)
 				if (resources[index].quantity > Rules::resources[index].overall_maximum)
 					return Rules::resources[index].overall_maximum;
@@ -72,11 +87,13 @@ namespace BuildOrder
 			return resources[index].quantity;
 		}
 
-		int usable(unsigned index) const {
+		int usable(unsigned index) const
+		{
 			return quantity(index) - resources[index].used;
 		}
 
-		unsigned maximum(unsigned index) const {
+		unsigned maximum(unsigned index) const
+		{
 			if (Rules::resources[index].maximum_per_resource.row.size())
 			{
 				unsigned max = 0;
@@ -92,7 +109,8 @@ namespace BuildOrder
 			return -1;
 		}
 
-		void applyEvent(unsigned i) {
+		void applyEvent(unsigned i)
+		{
 			MatrixRow<unsigned> limited_indexes;
 
 			for (unsigned r = 0; r < Rules::events[i].bonus.row.size(); r++)
@@ -122,7 +140,8 @@ namespace BuildOrder
 			}
 		}
 
-		void produceResource(unsigned index, unsigned quantity) {
+		void produceResource(unsigned index, unsigned quantity)
+		{
 			unsigned added = quantity;
 
 			if (Rules::resources[index].maximum_per_resource.row.size())
@@ -151,7 +170,8 @@ namespace BuildOrder
 					}
 		}
 
-		void consumeResource(unsigned type) {
+		void consumeResource(unsigned type)
+		{
 			if (resources[type].events.size())
 			{
 				unsigned step = 0;

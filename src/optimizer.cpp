@@ -197,3 +197,249 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::Optimizer::nonDominated
 
 	return ret;
 }
+
+unsigned BuildOrder::Optimizer::Optimizer::numberObjectives() const
+{
+	return objectives[0].row.size()+objectives[1].row.size()+objectives[2].row.size();
+}
+unsigned BuildOrder::Optimizer::Optimizer::numberRestrictions() const
+{
+	return restrictions[0].row.size()+restrictions[1].row.size()+restrictions[2].row.size();
+}
+
+void BuildOrder::Optimizer::Optimizer::update()
+{
+	_objV.resize(Rules::tasks.size(),0);
+	_incV.resize(Rules::tasks.size());
+	_decV.resize(Rules::tasks.size());
+
+	//INITIAL MAP
+	for (unsigned t = 0; t < Rules::tasks.size(); t++)
+	{
+		//RESOURCE BONUS/PENALTY
+		for (unsigned p = 0; p < Rules::resources.size(); p++)
+		{
+			double resource_reduce = 0;
+			double resource_increase = 0;
+
+			resource_reduce += Rules::tasks[t].costs.get(p) > 0 ? 1 : 0;
+			resource_reduce += Rules::tasks[t].consume.get(p) ? 1 : 0;
+			
+			resource_increase += Rules::tasks[t].costs.get(p) < 0 ? 1 : 0;
+			resource_increase += Rules::tasks[t].produce.get(p) ? 1 : 0;
+
+			resource_increase += Rules::taskValuePerEvent[p].get(t);
+
+			_incV[t].set(p,resource_increase);
+			_decV[t].set(p,resource_reduce);
+
+			if (resource_reduce > 0 || resource_increase > 0)
+			{
+				//OBJECTIVES
+				{
+					double objective_value = 0;
+
+					if (objectives[0].get(p))
+					{
+						if (objectives[0].get(p) == MINIMIZE)
+						{
+							objective_value += resource_reduce;
+							objective_value -= resource_increase/2;
+						}
+						else
+						{
+							objective_value -= resource_reduce/2;
+							objective_value += resource_increase;
+						}
+					}
+
+					if (objectives[1].get(p))
+					{
+						if (objectives[1].get(p) == MINIMIZE)
+							objective_value -= resource_increase/2;
+						else
+							objective_value += resource_increase;
+					}
+
+					if (objectives[2].get(p))
+					{
+						if (objectives[2].get(p) == MINIMIZE)
+							objective_value -= resource_reduce/2;
+						else
+							objective_value += resource_reduce;
+					}
+
+					_objV[t] += objective_value;// * objective_multiplier;
+				}
+			}
+		}
+
+		//COLLATERAL DAMAGE (EVENT DESTRUCTION)
+		{
+			//COSTS
+			for (unsigned k = 0; k < Rules::tasks[t].costs.row.size(); k++)
+			{
+				unsigned index = Rules::tasks[t].costs.row[k].index;
+
+				for (unsigned e = 0; e < Rules::resourceValueLost[index].row.size(); e++)
+				{
+					unsigned collateral = Rules::resourceValueLost[index].row[e].index;
+					double damage = 1;
+					
+					double objective_value = 0;
+
+					for (unsigned o = 0; o < objectives[0].row.size(); o++)
+					{
+						unsigned obj = objectives[0].row[o].index;
+						Objective type = objectives[0].row[o].value;
+
+						if (collateral == obj)
+						{
+							if (type == MINIMIZE)
+								objective_value += damage;
+							else
+								objective_value -= damage/2;
+						}
+					}
+
+					for (unsigned o = 0; o < objectives[2].row.size(); o++)
+					{
+						unsigned obj = objectives[2].row[o].index;
+						Objective type = objectives[2].row[o].value;
+
+						if (collateral == obj)
+						{
+							if (type == MINIMIZE)
+								objective_value -= damage/2;
+							else
+								objective_value += damage;
+						}
+					}
+
+					_objV[t] += objective_value;// * objective_multiplier;
+				}
+			}
+
+			//CONSUME
+			for (unsigned k = 0; k < Rules::tasks[t].consume.row.size(); k++)
+			{
+				unsigned index = Rules::tasks[t].consume.row[k].index;
+
+				for (unsigned e = 0; e < Rules::resourceValueLost[index].row.size(); e++)
+				{
+					unsigned collateral = Rules::resourceValueLost[index].row[e].index;
+					double damage = 1;
+					
+					double objective_value = 0;
+
+					for (unsigned o = 0; o < objectives[0].row.size(); o++)
+					{
+						unsigned obj = objectives[0].row[o].index;
+						Objective type = objectives[0].row[o].value;
+
+						if (collateral == obj)
+						{
+							if (type == MINIMIZE)
+								objective_value += damage;
+							else
+								objective_value -= damage/2;
+						}
+					}
+
+					for (unsigned o = 0; o < objectives[2].row.size(); o++)
+					{
+						unsigned obj = objectives[2].row[o].index;
+						Objective type = objectives[2].row[o].value;
+
+						if (collateral == obj)
+						{
+							if (type == MINIMIZE)
+								objective_value -= damage/2;
+							else
+								objective_value += damage;
+						}
+					}
+
+					_objV[t] += objective_value;// * objective_multiplier;
+				}
+			}
+		}
+
+	}
+}
+
+std::vector<double> BuildOrder::Optimizer::Optimizer::initialMap(double o, double r, GameState initial) const
+{
+	std::vector<double> taskValue(_objV.size(),0);
+
+	//RESTRICTIONS
+	for (unsigned t = 0; t < taskValue.size(); t++)
+		for (unsigned p = 0; p < Rules::resources.size(); p++)
+		{
+			double restriction_value = 0;
+
+			if (restrictions[0].get(p))
+			{
+				unsigned final = initial.resources[p].usable();
+
+				if (restrictions[0].get(p).less_than)
+					if (final >= restrictions[0].get(p).less_than)
+					{
+						restriction_value += _decV[t].get(p);
+						restriction_value -= _incV[t].get(p)/2;
+					}
+				
+				if (restrictions[0].get(p).greater_than)
+					if (final <= restrictions[0].get(p).greater_than)
+					{
+						restriction_value -= _decV[t].get(p)/2;
+						restriction_value += _incV[t].get(p);
+					}
+			}
+
+			if (restrictions[1].get(p))
+			{
+				unsigned final = initial.resources[p].quantity;
+				
+				if (restrictions[1].get(p).less_than)
+					if (final >= restrictions[1].get(p).less_than)
+					{
+						restriction_value += _decV[t].get(p);
+						restriction_value -= _incV[t].get(p)/2;
+					}
+				
+				if (restrictions[1].get(p).greater_than)
+					if (final <= restrictions[1].get(p).greater_than)
+					{
+						restriction_value -= _decV[t].get(p)/2;
+						restriction_value += _incV[t].get(p);
+					}
+			}
+
+			if (restrictions[2].get(p))
+			{
+				unsigned final = initial.resources[p].used;
+				
+				if (restrictions[2].get(p).less_than)
+					if (final >= restrictions[2].get(p).less_than)
+					{
+						restriction_value += _decV[t].get(p);
+						restriction_value -= _incV[t].get(p)/2;
+					}
+				
+				if (restrictions[2].get(p).greater_than)
+					if (final <= restrictions[2].get(p).greater_than)
+					{
+						restriction_value -= _decV[t].get(p)/2;
+						restriction_value += _incV[t].get(p);
+					}
+			}
+
+			taskValue[t] += restriction_value * r;// * restriction_multiplier;
+		}
+
+	for (unsigned t = 0; t < Rules::tasks.size(); t++)
+		taskValue[t] += _objV[t] * o;// + _resV[t] * r;
+
+	return taskValue;
+}

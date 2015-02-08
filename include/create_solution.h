@@ -7,6 +7,11 @@ namespace BuildOrder
 {
 	namespace Optimizer
 	{
+		void mapPrerequisites(Rules::Forest::c_it,
+							  GameState,
+							  std::vector<double> const&,
+							  std::vector<double>&);
+
 		std::vector<double> mapGoals(GameState, Optimizer const&,
 									 double objective_multiplier = 3.0,
 									 double restriction_multiplier = 4.0,

@@ -46,6 +46,10 @@ namespace BuildOrder
 
 		class Optimizer
 		{
+			std::vector<double> _objV;
+			std::vector<MatrixRow<double> > _incV;
+			std::vector<MatrixRow<double> > _decV;
+
 		public:
 			bool time_as_objective;
 
@@ -59,7 +63,7 @@ namespace BuildOrder
 			:	time_as_objective(true),
 				maximum_time(0),
 				neighborhood(delete_tail)
-			{ }
+			{ update(); }
 
 			virtual Population optimize(GameState, unsigned) const = 0;
 
@@ -71,6 +75,12 @@ namespace BuildOrder
 			unsigned producesGreaterThan(unsigned task) const;
 
 			Population nonDominated(Population p) const;
+
+			unsigned numberObjectives() const;
+			unsigned numberRestrictions() const;
+
+			void update();
+			std::vector<double> initialMap(double,double,GameState) const;
 		};
 	}
 }
