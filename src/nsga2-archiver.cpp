@@ -1,7 +1,7 @@
 #include "../include/nsga2-archiver.h"
 
 bool BuildOrder::Optimizer::NSGA2_Archiver::dominates(std::vector<unsigned> a,
-	std::vector<unsigned> b, std::vector<bool> min) const
+	std::vector<unsigned> b, std::vector<bool> min)
 {
 	bool strictly = false;
 	for (unsigned i = 0; i < a.size(); i++)
@@ -25,7 +25,7 @@ bool BuildOrder::Optimizer::NSGA2_Archiver::dominates(std::vector<unsigned> a,
 
 void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& indexes,
 	unsigned begin, unsigned end, unsigned objective,
-	std::vector<std::vector<unsigned> >& v) const
+	std::vector<std::vector<unsigned> >& v)
 {
 	if (end > indexes.size())
 		return;
@@ -39,8 +39,8 @@ void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& ind
 
 		unsigned storeIndex = begin;
 
-		for (unsigned i = storeIndex; i < end-1; i++)
-			if (v[indexes[i]][objective] < pivotValue)
+		for (unsigned i = storeIndex; i < end; i++)
+			if (v[indexes[i]][objective] <= pivotValue)
 			{
 				std::swap(indexes[i],indexes[storeIndex]);
 				storeIndex++;
@@ -52,7 +52,7 @@ void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& ind
 	}
 }
 void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& v,
-			   unsigned begin, unsigned end, std::vector<double> dist) const
+			   unsigned begin, unsigned end, std::vector<double>& dist)
 {
 	if (end > v.size())
 		return;
@@ -63,16 +63,19 @@ void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& v,
 		double pivotValue = dist[pivotIndex];
 
 		std::swap(v[pivotIndex],v[end]);
+		std::swap(dist[pivotIndex],dist[end]);
 
 		unsigned storeIndex = begin;
 
-		for (unsigned i = storeIndex; i < end-1; i++)
-			if (dist[i] < pivotValue)
+		for (unsigned i = storeIndex; i < end; i++)
+			if (dist[i] > pivotValue)
 			{
 				std::swap(v[i],v[storeIndex]);
+				std::swap(dist[i],dist[storeIndex]);
 				storeIndex++;
 			}
 		std::swap(v[storeIndex], v[end]);
+		std::swap(dist[storeIndex], dist[end]);
 
 		quicksort(v,begin,storeIndex - 1,dist);
 		quicksort(v,storeIndex + 1,end,dist);
@@ -80,6 +83,7 @@ void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& v,
 }
 
 BuildOrder::Optimizer::NSGA2_Archiver::NSGA2_Archiver(unsigned c, const Optimizer* o)
+: dist_func(NSGA2_Archiver::crowding)
 {
 	_capacity = c;
 	_data.reserve(c+1);
@@ -165,6 +169,43 @@ void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 		F.pop_back();
 
 	//CROWDING-DISTANCE-ASSIGNMENT
+	/*for (unsigned I = 0; I < F.size(); I++)
+		if (F[I].size() > 2)
+		{
+			std::vector<double> distance(F[I].size(), 0);
+
+			for (unsigned m = 0; m < min.size(); m++)
+			{
+				quicksort(F[I], 0, F[I].size()-1, m, P);
+
+				distance[0] = distance[distance.size()-1] = 1e37;
+
+				for (unsigned i = 1; i < F[I].size()-1; i++)
+				{
+					double dist = P[F[I][i+1]][m] - P[F[I][i-1]][m];
+					dist /= P[F[I][F[I].size()-1]][m] - P[F[I][0]][m];
+					distance[i] += dist;
+				}
+			}
+
+			quicksort(F[I], 0u, F[I].size()-1, distance);
+		}*/
+	dist_func(F,P,min);
+
+	//SORTING
+	Population new_pop;
+	for (unsigned i = 0; i < F.size(); i++)
+		for (unsigned p = 0; p < F[i].size(); p++)
+			new_pop.push_back(pop[F[i][p]]);
+
+	pop = new_pop;
+}
+
+void BuildOrder::Optimizer::NSGA2_Archiver::crowding (
+	std::vector<std::vector<unsigned> >& F,
+	std::vector<std::vector<unsigned> >& P,
+	std::vector<bool> const& min)
+{
 	for (unsigned I = 0; I < F.size(); I++)
 		if (F[I].size() > 2)
 		{
@@ -186,12 +227,4 @@ void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 
 			quicksort(F[I], 0u, F[I].size()-1, distance);
 		}
-
-	//SORTING
-	Population new_pop;
-	for (unsigned i = 0; i < F.size(); i++)
-		for (unsigned p = 0; p < F[i].size(); p++)
-			new_pop.push_back(pop[F[i][p]]);
-
-	pop = new_pop;
 }

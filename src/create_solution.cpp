@@ -26,12 +26,6 @@ std::vector<double> BuildOrder::Optimizer::mapGoals(GameState initial, Optimizer
 	double objective_multiplier, double restriction_multiplier, double prerequisite_multiplier,
 	double cost_multiplier, double maximum_multiplier)
 {
-	struct step
-	{
-		unsigned from;
-		unsigned to;
-	};
-
 	std::vector<double> taskValue = solver.initialMap(objective_multiplier, restriction_multiplier, initial);
 	std::vector<double> pr_value(Rules::tasks.size(), 0);
 	std::vector<double> max_value(Rules::tasks.size(), 0);
@@ -43,15 +37,8 @@ std::vector<double> BuildOrder::Optimizer::mapGoals(GameState initial, Optimizer
 
 	Rules::Forest::c_it it;
 
-	unsigned worries = solver.numberObjectives()+solver.numberRestrictions();
-
 	for (unsigned t = 0; t < Rules::tasks.size(); t++)
-	{
-		BuildOrder bo;
-		bo.push_back(t);
-		
-		possibles[t] = ::BuildOrder::Objective::possible(bo,initial);
-	}
+		possibles[t] = ::BuildOrder::Objective::possible(t,initial);
 
 	//PREREQUISITE MAP
 	for (unsigned i = 0; i < Rules::prerequisites.hsize(); i++)
@@ -130,7 +117,7 @@ std::vector<double> BuildOrder::Optimizer::mapGoals(GameState initial, Optimizer
 
 					cons_value[k->task] += deno * taskValue[it->task];
 				}
-				
+
 				for (unsigned i = 0; i < k->e.row.size(); i++)
 					cons_value[k->task] += 1;
 			}
@@ -263,7 +250,7 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create(GameState initial,
 
 	delta_r += dice;
 
-	unsigned rem = 1;
+	unsigned rem = 0;
 
 	double max_o = obj_m * delta_o * 100;
 	double max_r = res_m * delta_r * 100;
@@ -285,16 +272,18 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create(GameState initial,
 		{
 			if (ret.final_state.time >= solver.maximum_time)
 			{
-				ret.orders.erase(ret.orders.begin()+ret.orders.size()-rem, ret.orders.end());
-				ret.update(initial, solver.maximum_time);
 				if (rem >= ret.orders.size())
 					rem = 0;
 				else
 					rem++;
+				
+				ret.orders.erase(ret.orders.begin()+ret.orders.size()-rem, ret.orders.end());
+				ret.update(initial, solver.maximum_time);
 			}
 			continue;
 		}
-		else
+
+		if (ret.orders.size() == 200)
 			break;
 
 		dice = drng();

@@ -4,39 +4,24 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::NSGA2::optimize(GameSta
 {
 	NSGA2_Archiver pop(population_size,this);
 
+	#pragma omp parallel for num_threads(20)
 	for (unsigned i = 0; i < creation_cycles; i++)
 	{
-		Solution n = create(initial,*this,1);
-		
-		for (unsigned d = 0; !valid(n); d++)
-		{
-			if (d > n.orders.size())
-			{
-				n.orders.clear();
-				d = 0;
-			} else
-				n.orders.erase(n.orders.begin()+n.orders.size()-d, n.orders.end());
+		Solution n = create(initial, *this, stop_chance);
 
-			double obj_m = 2.5;
-			double res_m = 3.0;
-			while(nextTask(n, initial, *this, obj_m, res_m))
-			{
-				obj_m *= 1.1;
-				res_m *= 1.5;
-
-				if (valid(n))
-					break;
-			}
-		}
-
+		#pragma omp critical
 		pop.insert(n);
 	}
 
 	for (unsigned i = 0; i < iterations; i++)
 	{
+		//std::cout << "\tNSGA-II: " << i << "\n";
+		//std::cout << "\told " << pop.size() << "\n";
+
 		unsigned max = pop.size();///2;
 
 		//RECREATE STRAIN
+		#pragma omp parallel for num_threads(16)
 		for (unsigned p = 0; p < max; p++)
 		{
 			Population n = neighborhood(pop[p]);
@@ -44,30 +29,15 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::NSGA2::optimize(GameSta
 			{
 				n[t].update(initial, maximum_time);
 
-				for (unsigned d = 0; !valid(n[t]); d++)
-				{
-					if (d > n[t].orders.size())
-					{
-						n[t].orders.clear();
-						d = 0;
-					} else
-						n[t].orders.erase(n[t].orders.begin()+n[t].orders.size()-d, n[t].orders.end());
+				make_valid(n[t], *this, initial);
+				trim(n[t], *this, initial);
 
-					double obj_m = 2.5;
-					double res_m = 3.0;
-					while(nextTask(n[t], initial, *this, obj_m, res_m))
-					{
-						obj_m *= 1.1;
-						res_m *= 1.5;
-
-						if (valid(n[t]))
-							break;
-					}
-				}
-
+				#pragma omp critical
 				pop.insert(n[t]);
 			}
 		}
+
+		//std::cout << "\tnew " << pop.size() << "\n";
 	}
 
 	return pop();

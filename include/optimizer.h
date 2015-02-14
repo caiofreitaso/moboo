@@ -52,6 +52,7 @@ namespace BuildOrder
 
 		public:
 			bool time_as_objective;
+			double stop_chance;
 
 			unsigned maximum_time;
 			MatrixRow<Restriction> restrictions[3];
@@ -61,9 +62,10 @@ namespace BuildOrder
 
 			Optimizer()
 			:	time_as_objective(true),
+				stop_chance(1),
 				maximum_time(0),
 				neighborhood(delete_tail)
-			{ update(); }
+			{ }
 
 			virtual Population optimize(GameState, unsigned) const = 0;
 
@@ -78,6 +80,40 @@ namespace BuildOrder
 
 			unsigned numberObjectives() const;
 			unsigned numberRestrictions() const;
+
+			std::string print(Solution const& s) const
+			{
+				std::stringstream ret;
+				ret << s.final_state.time << " ";
+				for (unsigned j = 0; j < objectives[0].row.size(); j++)
+				{
+					unsigned index = objectives[0].row[j].index;
+					if (objectives[0].row[j].value == MAXIMIZE)
+						ret << "-";
+
+					ret << s.final_state.resources[index].usable() << " ";
+				}
+
+				for (unsigned j = 0; j < objectives[1].row.size(); j++)
+				{
+					unsigned index = objectives[1].row[j].index;
+					if (objectives[1].row[j].value == MAXIMIZE)
+						ret << "-";
+
+					ret << s.final_state.resources[index].quantity << " ";
+				}
+
+				for (unsigned j = 0; j < objectives[2].row.size(); j++)
+				{
+					unsigned index = objectives[2].row[j].index;
+					if (objectives[2].row[j].value == MAXIMIZE)
+						ret << "-";
+
+					ret << s.final_state.resources[index].used << " ";
+				}
+
+				return ret.str();
+			}
 
 			void update();
 			std::vector<double> initialMap(double,double,GameState) const;

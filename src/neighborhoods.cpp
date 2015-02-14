@@ -49,6 +49,9 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::one_swap(Solution const
 	Population new_sol;
 	new_sol.push_back(s);
 
+	if (s.orders.size() < 2)
+		return new_sol;
+
 	std::vector<unsigned> indexes;
 	for (unsigned i = 0; i < s.orders.size(); i++)
 		indexes.push_back(i);
@@ -72,15 +75,9 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::insert(Solution const& 
 	Population new_sol;
 	new_sol.push_back(s);
 
-	std::vector<unsigned> indexes;
-	for (unsigned i = 0; i < s.orders.size(); i++)
-		indexes.push_back(i);
+	unsigned a, t;
 
-	unsigned a, i_a, t;
-
-	i_a = rng() % indexes.size();
-	a = indexes[i_a];
-
+	a = rng() % s.orders.size();
 	t = rng() % Rules::tasks.size();
 
 	new_sol.back().orders.insert(new_sol.back().orders.begin()+a, t);

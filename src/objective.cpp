@@ -205,10 +205,13 @@ bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r, std::vecto
 
 bool BuildOrder::Objective::possible(BuildOrder& build, GameState& init)
 {
+	return possible(build[0].task, init);
+}
+
+bool BuildOrder::Objective::possible(unsigned task, GameState& init)
+{
 	std::vector<bool> should_I_Care(Rules::resources.size(),true);
 	std::vector<unsigned> final(Rules::resources.size(), 0);
-
-	unsigned task = build[0].task;
 
 	afterStack(final, init);
 	resourcesByEvents(should_I_Care, init);
@@ -407,55 +410,6 @@ BuildOrder::GameState BuildOrder::makespan(GameState init, BuildOrder& original,
 		}
 		
 		Objective::buildWhatYouCan(build, init, last, listTime);
-
-		
-		//CHECK MAXIMUM
-		/*
-			bool possible = true;
-			for (unsigned i = 0; i < Rules::tasks[build[0].task].produce.row.size(); i++)
-			{
-				unsigned index = Rules::tasks[build[0].task].produce.row[i].index;
-				unsigned value = Rules::tasks[build[0].task].produce.row[i].value;
-
-				if (init.usable(index) > 0)
-				{
-					unsigned usable = init.usable(index) + value;
-
-					if (init.maximum(index) <= usable)
-					{
-						possible = false;
-						
-						for (unsigned k = 0; k < Rules::tasks[build[0].task].produce.row.size() && !possible; k++)
-							if (i != k)
-							{
-								unsigned index2 = Rules::tasks[build[0].task].produce.row[k].index;
-
-								for (unsigned m = 0; m < Rules::resources[index].maximum_per_resource.row.size(); m++)
-									if (Rules::resources[index].maximum_per_resource.row[m].index == index2)
-									{
-										possible = true;
-										break;
-									}
-							}
-
-						for (unsigned k = 0; k < init.tasks.size() && !possible; k++)
-							for (unsigned p = 0; p < Rules::tasks[init.tasks[k].type].produce.row.size() && !possible; p++)
-								for (unsigned m = 0; m < Rules::resources[index].maximum_per_resource.row.size(); m++)
-									if (Rules::tasks[init.tasks[k].type].produce.row[p].index ==
-										Rules::resources[index].maximum_per_resource.row[m].index)
-									{
-										possible = true;
-										break;
-									}
-						if (!possible)
-							break;
-					}
-				}
-			}
-
-			if (!possible)
-				break;
-		*/
 		
 		unsigned min = Objective::update(init, listTime, maximum_time);
 

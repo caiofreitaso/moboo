@@ -70,8 +70,29 @@ void BuildOrder::Rules::init(char const* filename)
 			sstream.clear();
 			sstream.str(buffer);
 
-			for (unsigned i = 0; i < resources.size(); i++)
-				sstream >> resources[i].overall_maximum;
+			for(unsigned i,v; !sstream.eof(); )
+			{
+				long p = (long)sstream.tellg();
+				
+				sstream >> i;
+				while (sstream.fail())
+				{
+					sstream.clear();
+					sstream.seekg(p+1);
+					sstream >> i;
+				}
+				
+				p = (long)sstream.tellg();
+				sstream >> v;
+				while (sstream.fail())
+				{
+					sstream.clear();
+					sstream.seekg(p+1);
+					sstream >> v;
+				}
+
+				resources[i].overall_maximum = v;
+			}
 		}
 
 		// MAXIMUM PER RESOURCE
@@ -84,11 +105,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned j = 0; j < resources.size(); j++) {
-					unsigned tmp;
-					sstream >> tmp;
-					if (tmp)
-						resources[i].maximum_per_resource.set(j,tmp);
+				for(unsigned j,v; !sstream.eof(); )
+				{
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					resources[i].maximum_per_resource.set(j,v);
 				}
 
 				std::getline(file,buffer);
@@ -105,11 +143,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned j = 0; j < resources.size(); j++) {
-					unsigned tmp;
-					sstream >> tmp;
-					if (tmp)
-						resources[i].equivalence.set(j,tmp);
+				for(unsigned j,v; !sstream.eof(); )
+				{
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					resources[i].equivalence.set(j,v);
 				}
 
 				std::getline(file,buffer);
@@ -149,12 +204,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned k = 0; k < resources.size(); k++)
+				for(unsigned j,v; !sstream.eof(); )
 				{
-					unsigned cost;
-					sstream >> cost;
-					if (cost)
-						tasks[i].costs.set(k, cost);
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					tasks[i].costs.set(j,(int)v);
 				}
 			}
 		}
@@ -169,11 +240,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned j = 0; j < resources.size(); j++) {
-					unsigned tmp;
-					sstream >> tmp;
-					if (tmp)
-						tasks[i].prerequisite.set(j,tmp);
+				for(unsigned j,v; !sstream.eof(); )
+				{
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					tasks[i].prerequisite.set(j,v);
 				}
 
 				std::getline(file,buffer);
@@ -190,11 +278,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned j = 0; j < resources.size(); j++) {
-					unsigned tmp;
-					sstream >> tmp;
-					if (tmp)
-						tasks[i].consume.set(j,tmp);
+				for(unsigned j,v; !sstream.eof(); )
+				{
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					tasks[i].consume.set(j,v);
 				}
 
 				std::getline(file,buffer);
@@ -211,11 +316,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned j = 0; j < resources.size(); j++) {
-					unsigned tmp;
-					sstream >> tmp;
-					if (tmp)
-						tasks[i].borrow.set(j,tmp);
+				for(unsigned j,v; !sstream.eof(); )
+				{
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					tasks[i].borrow.set(j,v);
 				}
 
 				std::getline(file,buffer);
@@ -232,11 +354,28 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned j = 0; j < resources.size(); j++) {
-					unsigned tmp;
-					sstream >> tmp;
-					if (tmp)
-						tasks[i].produce.set(j,tmp);
+				for(unsigned j,v; !sstream.eof(); )
+				{
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					tasks[i].produce.set(j,v);
 				}
 
 				std::getline(file,buffer);
@@ -271,13 +410,30 @@ void BuildOrder::Rules::init(char const* filename)
 				sstream.clear();
 				sstream.str(buffer);
 
-				for (unsigned k = 0; k < resources.size(); k++)
+				for(unsigned j,v; !sstream.eof(); )
 				{
-					unsigned bonus;
-					sstream >> bonus;
-					if (bonus)
-						events[i].bonus.set(k,bonus);
+					long p = (long)sstream.tellg();
+					
+					sstream >> j;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> j;
+					}
+					
+					p = (long)sstream.tellg();
+					sstream >> v;
+					while (sstream.fail())
+					{
+						sstream.clear();
+						sstream.seekg(p+1);
+						sstream >> v;
+					}
+
+					events[i].bonus.set(j,v);
 				}
+
 			}
 		}
 

@@ -110,7 +110,7 @@ namespace BuildOrder
 								std::vector<unsigned> n_valid(Rules::tasks.size(), 0);
 
 								for (unsigned t = 0; t < n_valid.size(); t++)
-									n_valid[t] = hasPrerequisites(t, previous[s].final_state);
+									n_valid[t] = ::BuildOrder::Objective::possible(t, previous[s].final_state);
 
 								#pragma omp parallel for num_threads(5)
 								for (unsigned t = 0; t < n_valid.size(); t++)

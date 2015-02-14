@@ -29,6 +29,7 @@ namespace BuildOrder
 		bool prerequisiteInStack(std::vector<bool>&, std::vector<unsigned>&, unsigned, GameState&);
 		void resourcesByEvents(std::vector<bool>&, GameState&);
 		bool possible(BuildOrder&, GameState&);
+		bool possible(unsigned, GameState&);
 
 		void updateCosts(BuildOrder&, GameState&);
 		void updateBorrow(BuildOrder&, GameState&);

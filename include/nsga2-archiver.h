@@ -9,20 +9,31 @@ namespace BuildOrder
 	{
 		class NSGA2_Archiver : public Archiver
 		{
-			bool dominates(std::vector<unsigned> a, std::vector<unsigned> b, std::vector<bool> min) const;
+			static bool dominates(std::vector<unsigned> a, std::vector<unsigned> b,
+							std::vector<bool> min);
 
-			void quicksort(std::vector<unsigned>& indexes,
-						   unsigned begin, unsigned end, unsigned objective,
-						   std::vector<std::vector<unsigned> >& v) const;
+			static void quicksort(std::vector<unsigned>& indexes,
+							unsigned begin, unsigned end, unsigned objective,
+							std::vector<std::vector<unsigned> >& v);
 
-			void quicksort(std::vector<unsigned>& v,
-						   unsigned begin, unsigned end, std::vector<double> dist) const;
+			static void quicksort(std::vector<unsigned>& v,
+							unsigned begin, unsigned end, std::vector<double>& d);
 
 		public:
+			void (*dist_func)	(std::vector<std::vector<unsigned> >&,
+								 std::vector<std::vector<unsigned> >&,
+								 std::vector<bool> const&);
+
 			NSGA2_Archiver(unsigned c, const Optimizer* o);
 
 			virtual void filter(Population& pop) const;
 
+			static void crowding	(std::vector<std::vector<unsigned> >&,
+									 std::vector<std::vector<unsigned> >&,
+									 std::vector<bool> const&);
+			static void knees		(std::vector<std::vector<unsigned> >&,
+									 std::vector<std::vector<unsigned> >&,
+									 std::vector<bool> const&);
 		};
 	}
 }

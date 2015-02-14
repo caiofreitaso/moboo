@@ -2,21 +2,22 @@
 
 BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameState init, unsigned iterations) const
 {
-	AdaptativeGrid_Archiver population(creation_cycles, this, 32);//(ret);
+	AdaptativeGrid_Archiver population(creation_cycles*10, this, 32);//(ret);
 	
 	for (unsigned ii = 0; ii < iterations; ii++)
 	{
+		//std::cout << "\tMOGRASP: " << ii << "\n";
 		#pragma omp parallel for num_threads(20)
 		for (unsigned i = 0; i < creation_cycles; i++)
 		{
-			Solution n = create(init,*this,1);
+			Solution n = create(init, *this, stop_chance);
 			
 			//make_valid(n, *this, init);
 
 			#pragma omp critical
 			population.insert(n);
 		}
-
+		//std::cout << "\told " << population.size() << "\n";
 		unsigned old_size = 0;
 		unsigned count = 1;
 		while(count)
@@ -49,6 +50,7 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameS
 			if (old_size == population.size())
 				count--;
 		}
+		//std::cout << "\tnew " << population.size() << "\n";
 	}
 
 	return population();

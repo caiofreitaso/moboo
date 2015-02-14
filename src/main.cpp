@@ -13,6 +13,24 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
+	std::string sss = "123:333 122:22";
+	std::stringstream ssm;
+	ssm.str(sss);
+
+	for (; !ssm.eof(); )
+	{
+		int x = (long)ssm.tellg();
+		unsigned t;
+		ssm >> t;
+		if (ssm.fail())
+		{
+			ssm.clear();
+			ssm.seekg(x+1);
+		}
+		else
+			std::cout << t << "," << x << "\n";
+	}
+
 	BuildOrder::Rules::init(argv[1]);
 
 
@@ -37,16 +55,17 @@ int main(int argc, char const *argv[])
 	std::cout << "----------------------------\n";
 	BuildOrder::Rules::costs.print();
 	std::cout << "----------------------------\n";
+	BuildOrder::Rules::consumes.print();
+	std::cout << "----------------------------\n";
 	BuildOrder::Rules::maxima.print();
 	std::cout << "----------------------------\n";
-	
 
 	std::vector<BuildOrder::Optimizer::Population> total;
 	BuildOrder::Optimizer::Population ret, front;
 	#ifdef OPT_NSGA2
-	BuildOrder::Optimizer::NSGA2 solver(5,100);
+	BuildOrder::Optimizer::NSGA2 solver(50,50);
 	#else
-	BuildOrder::Optimizer::MOGRASP solver(15, 1, 1);
+	BuildOrder::Optimizer::MOGRASP solver(5, 1, 1);
 	//BuildOrder::Optimizer::ExactOpt solver(1000);
 	#endif
 
@@ -57,28 +76,26 @@ int main(int argc, char const *argv[])
 	#endif
 	
 	solver.maximum_time = 300;
+	solver.stop_chance = 0.3;
 	solver.objectives[0].set(0, BuildOrder::Optimizer::MAXIMIZE);
-//	solver.objectives[0].set(7, BuildOrder::Optimizer::MAXIMIZE);
+	solver.objectives[0].set(7, BuildOrder::Optimizer::MAXIMIZE);
+	solver.restrictions[0].set(7, BuildOrder::Optimizer::Restriction(0,1));
 //	solver.objectives[0].set(6, BuildOrder::Optimizer::MAXIMIZE);
-	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,2));
+//	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,1));
 	solver.update();
 
 	std::chrono::time_point<std::chrono::system_clock> a;
 
-	for (unsigned i = 0; i < 1; i++)
+	for (unsigned i = 0; i < 30; i++)
 	{
 		a = std::chrono::system_clock::now();
-		#ifdef OPT_NSGA2
-		total.push_back(solver.optimize(state, 10000));
-		#else
 		total.push_back(solver.optimize(state, 10));
-		#endif
 
 		std::chrono::duration<double> tt = std::chrono::system_clock::now() - a;
 		std::cout << "TIME = " << tt.count() << "\n";
 
 		for (unsigned k = 0; k < total.back().size(); k++)
-			std::cerr << total.back()[k].final_state.time << " -" << total.back()[k].final_state.resources[0].usable() << "\n";
+			std::cerr << solver.print(total.back()[k]) << "\n";
 
 		std::cerr << "\n";
 
@@ -95,9 +112,10 @@ int main(int argc, char const *argv[])
 
 		std::cout << "Time: " << front[i].final_state.time << "\n";
 		std::cout << "Minerals: " << front[i].final_state.resources[0].usable() << "\n";
-		std::cout << "Zerglings: " << front[i].final_state.resources[6].usable() << "\n";
+		std::cout << "Zerglings: " << front[i].final_state.resources[7].usable() << "\n";
 
-		std::cerr << front[i].final_state.time << " -" << front[i].final_state.resources[0].usable() << "\n";
+		std::cerr << solver.print(front[i]) << "\n";
+		//std::cerr << front[i].final_state.time << " -" << front[i].final_state.resources[0].usable() << "\n";
 	}
 
 	return 0;
