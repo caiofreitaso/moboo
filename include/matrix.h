@@ -2,7 +2,7 @@
 #define MATRIX_H
 
 #include <vector>
-#include <set>
+#include <iterator>
 #include <iostream>
 #include <algorithm>
 #include <omp.h>
@@ -21,13 +21,69 @@ struct MatrixElement {
 
 template<class T>
 struct MatrixRow {
-	//std::set<MatrixElement<T> > row;
-	std::vector<MatrixElement<T> > row;
-	//typedef typename std::set<MatrixElement<T> >::iterator iterator;
+	const T default_value = T();
+
 	typedef typename std::vector<MatrixElement<T> >::iterator iterator;
 	typedef typename std::vector<MatrixElement<T> >::const_iterator const_iterator;
 
-	const T default_value = T();
+	std::vector<MatrixElement<T> > row;
+
+	iterator find(unsigned index)
+	{
+		iterator ret;
+
+		if (index <= row[0].index)
+			return row.begin();
+
+		unsigned count = row.size();
+		unsigned i;
+		ret = row.begin();
+
+		for (iterator it; count; )
+		{
+			it = ret;
+			i = count / 2;
+			std::advance(ret, i);
+
+			if (it->index < index)
+			{
+				ret = it++;
+				count -= step + 1;
+			} else
+				count = step;
+		}
+
+		return ret;
+	}
+
+	const_iterator find(unsigned index) const
+	{
+		const_iterator ret;
+
+		if (index <= row[0].index)
+			return row.begin();
+
+		unsigned count = row.size();
+		unsigned i;
+		ret = row.begin();
+
+		for (const_iterator it; count; )
+		{
+			it = ret;
+			i = count / 2;
+			std::advance(ret, i);
+
+			if (it->index < index)
+			{
+				ret = it++;
+				count -= step + 1;
+			} else
+				count = step;
+		}
+
+		return ret;
+	}
+
 
 	MatrixElement<T> const& pivot() const {
 		if (row.size())
@@ -36,16 +92,36 @@ struct MatrixRow {
 			return MatrixElement<T>(-1);
 	}
 
+	unsigned size() const
+	{ return row.size(); }
+	MatrixElement<T> const& operator[](unsigned i) const
+	{ return row[i]; }
+
 	T get(unsigned i) const {
-		const_iterator it = row.begin();//row.find(i);
+		auto f = find(i);
+		if (f->index == i)
+			return f.first->value;
+		return default_value;
+
+		/*const_iterator it = row.begin();//row.find(i);
 		for (; it != row.end(); it++)
 			if (it->index == i)
 				return it->value;
-		return default_value;
+		return default_value;*/
 	}
 
 	void set(unsigned index, T v) {
-		iterator it = row.begin();//row.find(index);
+		auto f = find(i);
+		if (f->index == index)
+		{
+			if (v == default_value)
+				row.erase(f);
+			else
+				f->value = v;
+		} else if (v != default_value)
+			row.insert(f, MatrixElement<T>(index,v));
+
+		/*iterator it = row.begin();//row.find(index);
 		for (; it != row.end(); it++)
 			if (it->index == index)
 				break;
@@ -60,7 +136,7 @@ struct MatrixRow {
 				if (it->index > index)
 					break;
 			row.insert(it, MatrixElement<T>(index,v));
-		}
+		}*/
 	}
 };
 

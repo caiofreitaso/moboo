@@ -11,6 +11,7 @@ BuildOrder::Rules::Forest BuildOrder::Rules::prerequisites;
 BuildOrder::Rules::Forest BuildOrder::Rules::maxima;
 BuildOrder::Rules::Forest BuildOrder::Rules::costs;
 BuildOrder::Rules::Forest BuildOrder::Rules::consumes;
+BuildOrder::Rules::Forest BuildOrder::Rules::borrows;
 
 unsigned BuildOrder::Rules::mean_time = 0;
 
@@ -469,6 +470,7 @@ void BuildOrder::Rules::init(char const* filename)
 	maxima.create(RT_MAXIMUM);
 	costs.create(RT_COST);
 	consumes.create(RT_CONSUME);
+	borrows.create(RT_BORROW);
 }
 
 void BuildOrder::Rules::value(unsigned needed, unsigned needs, relation_type p, Dependency const& d)
@@ -565,6 +567,27 @@ void BuildOrder::Rules::value(unsigned needed, unsigned needs, relation_type p, 
 				}
 			}
 			break;
+		case RT_BORROW:
+			for (unsigned j = 0; j < tasks[needs].borrow.row.size(); j++)
+			{
+				unsigned idx = tasks[needs].borrow.row[j].index;
+				unsigned val = tasks[needs].borrow.row[j].value;
+
+				for (unsigned i = 0; i < tasks[needed].produce.row.size(); i++)
+				{
+					unsigned index = tasks[needed].produce.row[i].index;
+					unsigned value = tasks[needed].produce.row[i].value;
+
+					if (idx == index)
+					{
+						d.w.set(idx, best_function_ever(value, val));
+						d.bonus.set(idx, value);
+					}
+					else if (resourceValueLost[index].get(idx))
+						d.e.set(idx, 1);
+				}
+			}
+			break;		
 	}
 }
 

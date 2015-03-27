@@ -55,7 +55,8 @@ namespace BuildOrder
 
 		bool capacity;
 
-		int usable() const { return (int)(quantity - used - borrowed); }
+		int usable() const { return (int)(quantity - used); }
+		int usableB() const { return usable() - (int)borrowed; }
 	};
 
 	struct GameState {
@@ -90,6 +91,50 @@ namespace BuildOrder
 		int usable(unsigned index) const
 		{
 			return quantity(index) - resources[index].used;
+		}
+
+		static bool hasOMaximum(unsigned task, std::vector<unsigned> r)
+		{
+			for (unsigned i = 0; i < Rules::tasks[task].produce.row.size(); i++)
+			{
+				unsigned index = Rules::tasks[task].produce.row[i].index;
+				unsigned value = Rules::tasks[task].produce.row[i].value;
+		
+				if (Rules::resources[index].overall_maximum)
+					if (r[index] + value > Rules::resources[index].overall_maximum)
+						return false;
+			}
+			return true;
+		}
+
+		static bool hasMaximum(unsigned task, std::vector<unsigned> r)
+		{
+			for (unsigned i = 0; i < Rules::tasks[task].produce.row.size(); i++)
+			{
+				unsigned index = Rules::tasks[task].produce.row[i].index;
+				unsigned value = Rules::tasks[task].produce.row[i].value;
+				
+				if (r[index] + value > maximum(index,r))
+					return false;
+			}
+			return true;
+		}
+
+		static unsigned maximum(unsigned index, std::vector<unsigned> res)
+		{
+			if (Rules::resources[index].maximum_per_resource.row.size())
+			{
+				unsigned max = 0;
+				for (unsigned r = 0; r < Rules::resources[index].maximum_per_resource.row.size(); r++)
+				{
+					unsigned max_index = Rules::resources[index].maximum_per_resource.row[r].index;
+					unsigned max_value = Rules::resources[index].maximum_per_resource.row[r].value;
+
+					max += res[max_index] * max_value;
+				}
+				return max;
+			}
+			return -1;
 		}
 
 		unsigned maximum(unsigned index) const

@@ -25,6 +25,12 @@ namespace BuildOrder
 		double r = rng();
 		return r / Random::r->max();
 	}
+
+	inline double drng(double min, double max)
+	{
+		unsigned diff = max - min;
+		return (drng() * diff) + min;
+	}
 }
 
 namespace BuildOrder

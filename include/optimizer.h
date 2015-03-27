@@ -81,6 +81,82 @@ namespace BuildOrder
 			unsigned numberObjectives() const;
 			unsigned numberRestrictions() const;
 
+			std::string print() const
+			{
+				std::stringstream ret;
+				for (unsigned i = 0; i < objectives[0].row.size(); i++)
+				{
+					if (objectives[0].row[i].value == MINIMIZE)
+						ret << "m";
+					else
+						ret << "M";
+
+					ret << " U" << objectives[0].row[i].index << "\n";
+				}
+				for (unsigned i = 0; i < objectives[1].row.size(); i++)
+				{
+					if (objectives[1].row[i].value == MINIMIZE)
+						ret << "m";
+					else
+						ret << "M";
+
+					ret << " q" << objectives[1].row[i].index << "\n";
+				}
+				for (unsigned i = 0; i < objectives[2].row.size(); i++)
+				{
+					if (objectives[2].row[i].value == MINIMIZE)
+						ret << "m";
+					else
+						ret << "M";
+
+					ret << " u" << objectives[2].row[i].index << "\n";
+				}
+
+				ret << "\n";
+
+				ret << "t < " << maximum_time << "\n";
+				for (unsigned i = 0; i < restrictions[0].row.size(); i++)
+				{
+					if (restrictions[0].row[i].value.less_than)
+					{
+						ret << "U" << restrictions[0].row[i].index << " < ";
+						ret << restrictions[0].row[i].value.less_than << "\n";
+					}
+					if (restrictions[0].row[i].value.greater_than)
+					{
+						ret << "U" << restrictions[0].row[i].index << " > ";
+						ret << restrictions[0].row[i].value.greater_than << "\n";
+					}
+				}
+				for (unsigned i = 0; i < restrictions[1].row.size(); i++)
+				{
+					if (restrictions[1].row[i].value.less_than)
+					{
+						ret << "q" << restrictions[1].row[i].index << " < ";
+						ret << restrictions[1].row[i].value.less_than << "\n";
+					}
+					if (restrictions[1].row[i].value.greater_than)
+					{
+						ret << "q" << restrictions[1].row[i].index << " > ";
+						ret << restrictions[1].row[i].value.greater_than << "\n";
+					}
+				}
+				for (unsigned i = 0; i < restrictions[2].row.size(); i++)
+				{
+					if (restrictions[2].row[i].value.less_than)
+					{
+						ret << "u" << restrictions[2].row[i].index << " < ";
+						ret << restrictions[2].row[i].value.less_than << "\n";
+					}
+					if (restrictions[2].row[i].value.greater_than)
+					{
+						ret << "u" << restrictions[2].row[i].index << " > ";
+						ret << restrictions[2].row[i].value.greater_than << "\n";
+					}
+				}
+				return ret.str();
+			}
+
 			std::string print(Solution const& s) const
 			{
 				std::stringstream ret;
@@ -118,6 +194,8 @@ namespace BuildOrder
 			void update();
 			std::vector<double> initialMap(double,double,GameState) const;
 		};
+
+		void initOptimizer(Optimizer&, char const*);
 	}
 }
 

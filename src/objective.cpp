@@ -96,7 +96,7 @@ bool BuildOrder::can(unsigned task, GameState s)
 
 	for (unsigned i = 0; i < Rules::resources.size(); i++)
 	{
-		int done = s.resources[i].usable();
+		int done = s.resources[i].usableB();
 
 		if (done < use[i])
 			return false;
@@ -117,16 +117,37 @@ void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState& i
 		Rules::Event& event = Rules::events[i];
 		EventList& events = init.resources[event.trigger].events;
 
+		bool done = false;
+
 		if (events.size())
+		{
 			for (unsigned k = 0; k < event.bonus.row.size(); k++)
 				r[event.bonus.row[k].index] = false;
+			done = true;
+		}
+
+		for (unsigned j = 0; j < init.tasks.size(); j++)
+			if (!done)
+			{
+				unsigned produce = Rules::tasks[init.tasks[j].type].produce.get(event.trigger);
+				if (produce)
+				{
+					for (unsigned k = 0; k < event.bonus.row.size(); k++)
+						r[event.bonus.row[k].index] = false;
+					done = true;
+				}
+			} else
+				break;
 	}
 }
 
-void BuildOrder::Objective::afterStack(std::vector<unsigned>& final, GameState& init)
+void BuildOrder::Objective::afterStack(std::vector<unsigned>& final,
+	std::vector<unsigned>& finalQ, GameState& init)
 {
 	for (unsigned i = 0; i < final.size(); i++)
 		final[i] = init.resources[i].usable();
+	for (unsigned i = 0; i < finalQ.size(); i++)
+		finalQ[i] = init.resources[i].quantity;
 
 	for (unsigned k = 0; k < init.tasks.size(); k++)
 	{
@@ -139,6 +160,7 @@ void BuildOrder::Objective::afterStack(std::vector<unsigned>& final, GameState& 
 			unsigned p_idx = task.produce.row[p].index;
 
 			final[p_idx] += p_val;
+			finalQ[p_idx] += p_val;
 		}
 
 		for (unsigned p = 0; p < task.consume.row.size(); p++)
@@ -148,18 +170,11 @@ void BuildOrder::Objective::afterStack(std::vector<unsigned>& final, GameState& 
 
 			final[p_idx] -= p_val;
 		}
-
-		for (unsigned p = 0; p < task.borrow.row.size(); p++)
-		{
-			unsigned p_val = task.borrow.row[p].value;
-			unsigned p_idx = task.borrow.row[p].index;
-
-			final[p_idx] += p_val;
-		}
 	}
 }
 
-bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r, std::vector<unsigned>& final, unsigned t, GameState& init)
+bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r,
+	std::vector<unsigned>& final, unsigned t, GameState& init)
 {
 	std::vector<int> values(r.size(), 0);
 
@@ -212,10 +227,15 @@ bool BuildOrder::Objective::possible(unsigned task, GameState& init)
 {
 	std::vector<bool> should_I_Care(Rules::resources.size(),true);
 	std::vector<unsigned> final(Rules::resources.size(), 0);
+	std::vector<unsigned> finalQ(Rules::resources.size(), 0);
 
-	afterStack(final, init);
+	afterStack(final, finalQ, init);
 	resourcesByEvents(should_I_Care, init);
 
+	if (!GameState::hasOMaximum(task,finalQ))
+		return false;
+	if (!GameState::hasMaximum(task,final))
+		return false;
 	if (!prerequisiteInStack(should_I_Care, final, task, init))
 		return false;
 

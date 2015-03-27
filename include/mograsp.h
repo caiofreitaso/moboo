@@ -11,20 +11,21 @@ namespace BuildOrder
 		class MOGRASP : public Optimizer
 		{
 			public:
+				unsigned archive_size;
 				unsigned creation_cycles;
 				unsigned parents;
 				unsigned childs;
 
 				MOGRASP() :
-					creation_cycles(5), parents(1),
+					archive_size(50),creation_cycles(5), parents(1),
 					childs(2)
 				{ }
 				MOGRASP(unsigned c) :
-					creation_cycles(c), parents(1),
+					archive_size(c*10),creation_cycles(c), parents(1),
 					childs(2)
 				{ }
 				MOGRASP(unsigned c, unsigned p, unsigned h) :
-					creation_cycles(c), parents(p),
+					archive_size(c*10),creation_cycles(c), parents(p),
 					childs(h)
 				{ }
 

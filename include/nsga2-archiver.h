@@ -9,6 +9,7 @@ namespace BuildOrder
 	{
 		class NSGA2_Archiver : public Archiver
 		{
+		protected:
 			static bool dominates(std::vector<unsigned> a, std::vector<unsigned> b,
 							std::vector<bool> min);
 
@@ -29,9 +30,6 @@ namespace BuildOrder
 			virtual void filter(Population& pop) const;
 
 			static void crowding	(std::vector<std::vector<unsigned> >&,
-									 std::vector<std::vector<unsigned> >&,
-									 std::vector<bool> const&);
-			static void knees		(std::vector<std::vector<unsigned> >&,
 									 std::vector<std::vector<unsigned> >&,
 									 std::vector<bool> const&);
 		};

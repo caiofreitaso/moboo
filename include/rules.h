@@ -44,14 +44,18 @@ namespace BuildOrder
 			RT_COST,
 			RT_CONSUME,
 			RT_MAXIMUM,
+			RT_BORROW,
 			RT_PREREQUISITE
 		};
 
 		struct Dependency {
 			unsigned task;
+			mutable double value;
 			mutable MatrixRow<double> bonus;
 			mutable MatrixRow<double> w;
 			mutable MatrixRow<double> e;
+
+			Dependency() : task(0), value(0) { }
 
 			bool operator<(Dependency const& d) const
 			{ return task < d.task; }
@@ -63,6 +67,13 @@ namespace BuildOrder
 		struct Item {
 			unsigned task;
 			mutable std::set<Dependency> dependencies;
+
+			std::set<Dependency>::iterator find(unsigned t) const
+			{
+				Dependency d;
+				d.task = t;
+				return dependencies.find(d);
+			}
 
 			bool operator<(Item const& d) const
 			{ return task < d.task; }
@@ -151,6 +162,18 @@ namespace BuildOrder
 			c_it end() const
 			{ return _data.cend(); }
 
+			void erase(unsigned t)
+			{
+				Item i;
+				i.task = t;
+				_data.erase(_data.find(i));
+				if (_t == RT_PREREQUISITE)
+				{
+					_headers.clear();
+					getHeaders();
+				}
+			}
+
 			c_it find(unsigned t) const
 			{
 				Item i;
@@ -203,6 +226,7 @@ namespace BuildOrder
 		extern Forest maxima;
 		extern Forest costs;
 		extern Forest consumes;
+		extern Forest borrows;
 
 		extern unsigned mean_time;
 

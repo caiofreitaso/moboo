@@ -25,7 +25,7 @@ namespace BuildOrder
 
 		typedef std::vector<time_helper> remaining_list;
 
-		void afterStack(std::vector<unsigned>&, GameState&);
+		void afterStack(std::vector<unsigned>&, std::vector<unsigned>&, GameState&);
 		bool prerequisiteInStack(std::vector<bool>&, std::vector<unsigned>&, unsigned, GameState&);
 		void resourcesByEvents(std::vector<bool>&, GameState&);
 		bool possible(BuildOrder&, GameState&);

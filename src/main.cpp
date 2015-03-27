@@ -1,41 +1,69 @@
 #include <iostream>
+#include "../include/knee.h"
 #include "../include/nsga2.h"
 #include "../include/mograsp.h"
 #include "../include/exact.h"
 
+BuildOrder::Optimizer::Optimizer* optm = 0;
+unsigned iterations = 20;
+unsigned archSize = 20;
+
 int main(int argc, char const *argv[])
 {
-	if (argc < 3)
+	if (argc < 4)
 	{
-		std::cout << "Usage: " << argv[0] << " [system] [state]\n\n";
-		std::cout << "\tsystem\tFile with the system description.\n";
-		std::cout << "\tstate\tFile with the initial state description.\n\n";
+		std::cout << "Usage: " << argv[0] << " system state model [options]\n\n"
+				  << "  system\tFile with the system description.\n"
+				  << "  state\t\tFile with the initial state description.\n"
+				  << "  model\t\tFile with the problem description.\n\n"
+				  << "Options:\n"
+				  << "  -o <optimizer>\tChoose the optimizer:\n"
+				  << "  \t\t\tnsga2, mograsp, exact, knee\n"
+				  << "  -n <neighborhood>\tChoose the neighborhood:\n"
+				  << "  \t\t\tdelete_one, delete_tail, one_swap, insert\n"
+				  << "  -i <value>\t\tNumber of iterations\n"
+				  << "  \t\t\t[1, +INF]\tdefault = 20\n"
+				  << "  -aS <value>\t\tArchiver size\n"
+				  << "  \t\t\t[1, +INF]\tdefault = 20\n"
+				  << "  -objm <value>\t\tMinimum objective multiplier\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 2.0\n"
+				  << "  -objM <value>\t\tMaximum objective multiplier\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 4.0\n"
+				  << "  -resm <value>\t\tMinimum restriction multiplier\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 1.5\n"
+				  << "  -resM <value>\t\tMaximum restriction multiplier\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 3.5\n"
+				  << "  -dOm <value>\t\tMinimum objective increase rate\n"
+				  << "  \t\t\t[1, +INF]\tdefault = 1\n"
+				  << "  -dOM <value>\t\tMaximum objective increase rate\n"
+				  << "  \t\t\t(1, +INF]\tdefault = 1.2\n"
+				  << "  -dRm <value>\t\tMinimum restriction increase rate\n"
+				  << "  \t\t\t[1, +INF]\tdefault = 1.2\n"
+				  << "  -dRM <value>\t\tMaximum restriction increase rate\n"
+				  << "  \t\t\t(1, +INF]\tdefault = 1.4\n"
+  				  << "  -Fobjm <value>\tMinimum objective multiplier [FIX]\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 1.5\n"
+				  << "  -FobjM <value>\tMaximum objective multiplier [FIX]\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 2.5\n"
+				  << "  -Fresm <value>\tMinimum restriction multiplier [FIX]\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 2.6\n"
+				  << "  -FresM <value>\tMaximum restriction multiplier [FIX]\n"
+				  << "  \t\t\t[0, +INF]\tdefault = 3.5\n"
+				  << "  -FdOm <value>\t\tMinimum objective increase rate [FIX]\n"
+				  << "  \t\t\t[1, +INF]\tdefault = 1.1\n"
+				  << "  -FdOM <value>\t\tMaximum objective increase rate [FIX]\n"
+				  << "  \t\t\t(1, +INF]\tdefault = 1.3\n"
+				  << "  -FdRm <value>\t\tMinimum restriction increase rate [FIX]\n"
+				  << "  \t\t\t[1, +INF]\tdefault = 1.4\n"
+				  << "  -FdRM <value>\t\tMaximum restriction increase rate [FIX]\n"
+				  << "  \t\t\t(1, +INF]\tdefault = 2.0\n";
 		return 0;
 	}
 
-	std::string sss = "123:333 122:22";
-	std::stringstream ssm;
-	ssm.str(sss);
-
-	for (; !ssm.eof(); )
-	{
-		int x = (long)ssm.tellg();
-		unsigned t;
-		ssm >> t;
-		if (ssm.fail())
-		{
-			ssm.clear();
-			ssm.seekg(x+1);
-		}
-		else
-			std::cout << t << "," << x << "\n";
-	}
-
-	BuildOrder::Rules::init(argv[1]);
-
-
 	BuildOrder::GameState state;
 
+	BuildOrder::Rules::init(argv[1]);
+	
 	BuildOrder::createState(state);
 	BuildOrder::initState(state, argv[2]);
 
@@ -53,6 +81,8 @@ int main(int argc, char const *argv[])
 	std::cout << "----------------------------\n";
 	BuildOrder::Rules::prerequisites.print();
 	std::cout << "----------------------------\n";
+	BuildOrder::Rules::borrows.print();
+	std::cout << "----------------------------\n";
 	BuildOrder::Rules::costs.print();
 	std::cout << "----------------------------\n";
 	BuildOrder::Rules::consumes.print();
@@ -65,7 +95,7 @@ int main(int argc, char const *argv[])
 	#ifdef OPT_NSGA2
 	BuildOrder::Optimizer::NSGA2 solver(50,50);
 	#else
-	BuildOrder::Optimizer::MOGRASP solver(5, 1, 1);
+	BuildOrder::Optimizer::MOGRASP solver(50, 1, 1);
 	//BuildOrder::Optimizer::ExactOpt solver(1000);
 	#endif
 
@@ -75,11 +105,13 @@ int main(int argc, char const *argv[])
 	solver.neighborhood = BuildOrder::Optimizer::one_swap;//swap_and_delete;
 	#endif
 	
-	solver.maximum_time = 300;
 	solver.stop_chance = 0.3;
+	BuildOrder::Optimizer::initOptimizer(solver,argv[3]);
+	std::cout << solver.print();
+	/*solver.maximum_time = 300;
 	solver.objectives[0].set(0, BuildOrder::Optimizer::MAXIMIZE);
 	solver.objectives[0].set(7, BuildOrder::Optimizer::MAXIMIZE);
-	solver.restrictions[0].set(7, BuildOrder::Optimizer::Restriction(0,1));
+	solver.restrictions[0].set(7, BuildOrder::Optimizer::Restriction(0,1));*/
 //	solver.objectives[0].set(6, BuildOrder::Optimizer::MAXIMIZE);
 //	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,1));
 	solver.update();
@@ -89,7 +121,7 @@ int main(int argc, char const *argv[])
 	for (unsigned i = 0; i < 30; i++)
 	{
 		a = std::chrono::system_clock::now();
-		total.push_back(solver.optimize(state, 10));
+		total.push_back(solver.optimize(state, 1));
 
 		std::chrono::duration<double> tt = std::chrono::system_clock::now() - a;
 		std::cout << "TIME = " << tt.count() << "\n";

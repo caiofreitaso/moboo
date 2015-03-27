@@ -73,14 +73,14 @@ bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
 		
 		if (value.less_than)
 			if (usable > 0)
-				if ((unsigned)usable >= value.less_than)
+				if ((unsigned)usable > value.less_than)
 					return false;
 
 		if (value.greater_than)
 		{
 			if (usable > 0)
 			{
-				if ((unsigned)usable <= value.greater_than)
+				if ((unsigned)usable < value.greater_than)
 					return false;
 			} else
 				return false;
@@ -96,12 +96,12 @@ bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
 
 		if (value.less_than)
 		{
-			if (s.final_state.resources[index].quantity >= value.less_than)
+			if (s.final_state.resources[index].quantity > value.less_than)
 				return false;
 		}
 		if (value.greater_than)
 		{
-			if (s.final_state.resources[index].quantity <= value.greater_than)
+			if (s.final_state.resources[index].quantity < value.greater_than)
 				return false;
 		}
 	}
@@ -115,12 +115,12 @@ bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
 
 		if (value.less_than)
 		{
-			if (s.final_state.resources[index].used >= value.less_than)
+			if (s.final_state.resources[index].used > value.less_than)
 				return false;
 		}
 		if (value.greater_than)
 		{
-			if (s.final_state.resources[index].used <= value.greater_than)
+			if (s.final_state.resources[index].used < value.greater_than)
 				return false;
 		}
 	}
@@ -442,4 +442,120 @@ std::vector<double> BuildOrder::Optimizer::Optimizer::initialMap(double o, doubl
 		taskValue[t] += _objV[t] * o;// + _resV[t] * r;
 
 	return taskValue;
+}
+
+void BuildOrder::Optimizer::initOptimizer(Optimizer& o, char const* f)
+{
+	std::fstream file;
+	std::string buffer;
+	std::stringstream ss;
+
+	file.open(f);
+
+	//OBJECTIVES
+	do
+	{
+		std::getline(file,buffer);
+
+		Objective min = (buffer[0] == 'm') ? MINIMIZE : MAXIMIZE;
+
+		if (buffer[0] != 'm' && buffer[0] != 'M')
+			break;
+
+		unsigned l = 1;
+		while (buffer[l] == ' ')
+			l++;
+
+		unsigned target;
+		switch(buffer[l])
+		{
+			case 'U' : target = 0; break;
+			case 'q' : target = 1; break;
+			case 'u' : target = 2; break;
+			default:
+				file.close();
+				return;
+		}
+
+		l++;
+		ss.str(&buffer[l]);
+
+		unsigned index;
+		ss >> index;
+		ss.clear();
+
+		o.objectives[target].set(index, min);
+
+	} while (buffer[0] == 'm' || buffer[0] == 'M');
+
+	while(buffer.length() == 0)
+		std::getline(file,buffer);
+
+	//TIME RESTRICTION
+	{
+		if (buffer[0] != 't')
+		{
+			file.close();
+			return;
+		}
+
+		unsigned l = 1;
+		while (buffer[l] == ' ' || buffer[l] == '<')
+			l++;
+
+		ss.str(&buffer[l]);
+		unsigned mtime;
+		ss >> mtime;
+		ss.clear();
+
+		o.maximum_time = mtime;
+	}
+
+	do
+	{
+		std::getline(file,buffer);
+		
+		unsigned l = 0;
+		unsigned target;
+		switch(buffer[l])
+		{
+			case 'U' : target = 0; break;
+			case 'q' : target = 1; break;
+			case 'u' : target = 2; break;
+			default:
+				file.close();
+				return;
+		}
+
+		l++;
+		ss.str(&buffer[l]);
+
+		unsigned index;
+		ss >> index;
+		ss.clear();
+
+		while (buffer[l] != '<' && buffer[l] != '>')
+			l++;
+
+		bool less = (buffer[l] == '<');
+		l++;
+
+		ss.str(&buffer[l]);
+
+		unsigned value;
+		ss >> value;
+		ss.clear();
+
+		Restriction r = o.restrictions[target].get(index);
+		
+		if (less)
+			r.less_than = value;
+		else
+			r.greater_than = value;
+
+		o.restrictions[target].set(index, r);
+
+		if (file.eof())
+			break;
+	} while (buffer[0] == 'U' || buffer[0] == 'u'|| buffer[0] == 'q');
 }

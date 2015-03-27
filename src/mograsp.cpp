@@ -2,7 +2,7 @@
 
 BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameState init, unsigned iterations) const
 {
-	AdaptativeGrid_Archiver population(creation_cycles*10, this, 32);//(ret);
+	AdaptativeGrid_Archiver population(archive_size, this, 32);//(ret);
 	
 	for (unsigned ii = 0; ii < iterations; ii++)
 	{
