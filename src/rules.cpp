@@ -7,13 +7,19 @@ std::vector<BuildOrder::Rules::Resource> BuildOrder::Rules::resources;
 std::vector<MatrixRow<unsigned> > BuildOrder::Rules::taskValuePerEvent;
 std::vector<MatrixRow<unsigned> > BuildOrder::Rules::resourceValueLost;
 
-BuildOrder::Rules::Forest BuildOrder::Rules::prerequisites;
+/*BuildOrder::Rules::Forest BuildOrder::Rules::prerequisites;
 BuildOrder::Rules::Forest BuildOrder::Rules::maxima;
 BuildOrder::Rules::Forest BuildOrder::Rules::costs;
 BuildOrder::Rules::Forest BuildOrder::Rules::consumes;
-BuildOrder::Rules::Forest BuildOrder::Rules::borrows;
+BuildOrder::Rules::Forest BuildOrder::Rules::borrows;*/
 
 unsigned BuildOrder::Rules::mean_time = 0;
+
+bool BuildOrder::Rules::fillsPrerequisite(unsigned task, unsigned resource, unsigned amount)
+{ return tasks[task].prerequisite.get(resource) <= amount; }
+
+bool BuildOrder::Rules::fillsBorrow(unsigned task, unsigned resource, unsigned amount)
+{ return tasks[task].borrow.get(resource) <= amount; }
 
 void BuildOrder::Rules::init(char const* filename)
 {
@@ -466,14 +472,14 @@ void BuildOrder::Rules::init(char const* filename)
 					taskValuePerEvent[index].set(k, 1);
 		}
 
-	prerequisites.create(RT_PREREQUISITE);
+	/*prerequisites.create(RT_PREREQUISITE);
 	maxima.create(RT_MAXIMUM);
 	costs.create(RT_COST);
 	consumes.create(RT_CONSUME);
-	borrows.create(RT_BORROW);
+	borrows.create(RT_BORROW);*/
 }
 
-void BuildOrder::Rules::value(unsigned needed, unsigned needs, relation_type p, Dependency const& d)
+/*void BuildOrder::Rules::value(unsigned needed, unsigned needs, relation_type p, Dependency const& d)
 {
 	switch(p)
 	{
@@ -594,4 +600,4 @@ void BuildOrder::Rules::value(unsigned needed, unsigned needs, relation_type p, 
 double BuildOrder::Rules::best_function_ever(double a, double b)
 {
 	return a * tanh(a/b);
-}
+}*/

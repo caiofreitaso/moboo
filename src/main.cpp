@@ -63,6 +63,7 @@ int main(int argc, char const *argv[])
 	BuildOrder::GameState state;
 
 	BuildOrder::Rules::init(argv[1]);
+	BuildOrder::Rules::initGraph();
 	
 	BuildOrder::createState(state);
 	BuildOrder::initState(state, argv[2]);
@@ -78,7 +79,7 @@ int main(int argc, char const *argv[])
 		if (state.resources[i].usable())
 			std::cout << i << ": " << state.resources[i].usable() << "\n";
 
-	std::cout << "----------------------------\n";
+	/*std::cout << "----------------------------\n";
 	BuildOrder::Rules::prerequisites.print();
 	std::cout << "----------------------------\n";
 	BuildOrder::Rules::borrows.print();
@@ -88,7 +89,7 @@ int main(int argc, char const *argv[])
 	BuildOrder::Rules::consumes.print();
 	std::cout << "----------------------------\n";
 	BuildOrder::Rules::maxima.print();
-	std::cout << "----------------------------\n";
+	std::cout << "----------------------------\n";*/
 
 	std::vector<BuildOrder::Optimizer::Population> total;
 	BuildOrder::Optimizer::Population ret, front;
@@ -115,6 +116,15 @@ int main(int argc, char const *argv[])
 //	solver.objectives[0].set(6, BuildOrder::Optimizer::MAXIMIZE);
 //	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,1));
 	solver.update();
+
+	BuildOrder::Optimizer::Solution s;
+	s.orders.push_back(1);s.orders.push_back(1);
+	s.orders.push_back(14);s.orders.push_back(1);
+	s.orders.push_back(13);s.orders.push_back(3);
+	s.orders.push_back(0);s.orders.push_back(0);
+	s.orders.push_back(1);s.orders.push_back(1);
+	s.orders.push_back(23);
+	s.update(state,solver.maximum_time);
 
 	std::chrono::time_point<std::chrono::system_clock> a;
 

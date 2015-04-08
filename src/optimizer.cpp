@@ -71,7 +71,7 @@ bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
 
 		int usable = s.final_state.resources[index].usable();
 		
-		if (value.less_than)
+		if (value.less_than != -1)
 			if (usable > 0)
 				if ((unsigned)usable > value.less_than)
 					return false;
@@ -94,7 +94,7 @@ bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
 		value.less_than = restrictions[1].row[i].value.less_than;
 		value.greater_than = restrictions[1].row[i].value.greater_than;
 
-		if (value.less_than)
+		if (value.less_than != -1)
 		{
 			if (s.final_state.resources[index].quantity > value.less_than)
 				return false;
@@ -113,7 +113,7 @@ bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
 		value.less_than = restrictions[2].row[i].value.less_than;
 		value.greater_than = restrictions[2].row[i].value.greater_than;
 
-		if (value.less_than)
+		if (value.less_than != -1)
 		{
 			if (s.final_state.resources[index].used > value.less_than)
 				return false;

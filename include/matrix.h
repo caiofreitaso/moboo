@@ -16,11 +16,18 @@ struct MatrixElement {
 	MatrixElement(unsigned i, T v) : index(i), value(v) { }
 	MatrixElement(MatrixElement const& e) : index(e.index), value(e.value) { }
 
+	MatrixElement& operator=(MatrixElement r)
+	{
+		std::swap(index,r.index);
+		std::swap(value,r.value);
+		return *this;
+	}
 	bool operator<(MatrixElement const& r) const { return index < r.index; }
+	bool operator<(unsigned r) const { return index < r; }
 };
 
 template<class T>
-struct MatrixRow {
+struct Row {
 	const T default_value = T();
 
 	typedef typename std::vector<MatrixElement<T> >::iterator iterator;
@@ -28,115 +35,80 @@ struct MatrixRow {
 
 	std::vector<MatrixElement<T> > row;
 
+	Row& operator=(Row e)
+	{ std::swap(row,e.row); }
+
+
+	iterator begin() { return row.begin(); }
+	iterator end()	 { return row.end(); }
+
+
 	iterator find(unsigned index)
-	{
-		iterator ret;
-
-		if (index <= row[0].index)
-			return row.begin();
-
-		unsigned count = row.size();
-		unsigned i;
-		ret = row.begin();
-
-		for (iterator it; count; )
-		{
-			it = ret;
-			i = count / 2;
-			std::advance(ret, i);
-
-			if (it->index < index)
-			{
-				ret = it++;
-				count -= step + 1;
-			} else
-				count = step;
-		}
-
-		return ret;
-	}
+	{ return std::lower_bound(row.begin(), row.end(), index); }
 
 	const_iterator find(unsigned index) const
-	{
-		const_iterator ret;
+	{ return std::lower_bound(row.begin(), row.end(), index); }
 
-		if (index <= row[0].index)
-			return row.begin();
+	unsigned size() const
+	{ return row.size(); }
+	
+	MatrixElement<T>& operator[](unsigned i)
+	{ return row[i]; }
 
-		unsigned count = row.size();
-		unsigned i;
-		ret = row.begin();
+	MatrixElement<T> const& operator[](unsigned i) const
+	{ return row[i]; }
 
-		for (const_iterator it; count; )
-		{
-			it = ret;
-			i = count / 2;
-			std::advance(ret, i);
-
-			if (it->index < index)
-			{
-				ret = it++;
-				count -= step + 1;
-			} else
-				count = step;
-		}
-
-		return ret;
+	virtual T get(unsigned i) const {
+		auto f = find(i);
+		if (f == this->row.end())
+			return default_value;
+		if (f->index == i)
+			return f->value;
+		return default_value;
 	}
 
+	virtual void set(unsigned index, T v) {
+		auto f = find(index);
+		row.insert(f, MatrixElement<T>(index,v));
+	}
+};
 
+template<class T>
+struct MatrixRow : public Row<T> {
 	MatrixElement<T> const& pivot() const {
-		if (row.size())
-			return *row.begin();
+		if (this->row.size())
+			return *this->row.begin();
 		else
 			return MatrixElement<T>(-1);
 	}
 
-	unsigned size() const
-	{ return row.size(); }
-	MatrixElement<T> const& operator[](unsigned i) const
-	{ return row[i]; }
-
-	T get(unsigned i) const {
-		auto f = find(i);
+	virtual T get(unsigned i) const {
+		auto f = this->find(i);
+		if (f == this->row.end())
+			return MatrixRow::default_value;
 		if (f->index == i)
-			return f.first->value;
-		return default_value;
-
-		/*const_iterator it = row.begin();//row.find(i);
-		for (; it != row.end(); it++)
-			if (it->index == i)
-				return it->value;
-		return default_value;*/
+			return f->value;
+		return MatrixRow::default_value;
 	}
 
-	void set(unsigned index, T v) {
-		auto f = find(i);
-		if (f->index == index)
+	virtual void set(unsigned index, T v) {
+		auto f = this->find(index);
+		if (f == this->row.end())
 		{
-			if (v == default_value)
-				row.erase(f);
-			else
-				f->value = v;
-		} else if (v != default_value)
-			row.insert(f, MatrixElement<T>(index,v));
-
-		/*iterator it = row.begin();//row.find(index);
-		for (; it != row.end(); it++)
-			if (it->index == index)
-				break;
-
-		if (it != row.end()) {
-			if (v == default_value)
-				row.erase(it);
-			else
-				it->value = v;
-		} else if (v != default_value) {
-			for (it = row.begin(); it != row.end(); it++)
-				if (it->index > index)
-					break;
-			row.insert(it, MatrixElement<T>(index,v));
-		}*/
+			if (v != MatrixRow::default_value)
+				this->row.insert(f, MatrixElement<T>(index,v));
+		}
+		else
+		{
+			if (f->index == index)
+			{
+				if (v == MatrixRow::default_value)
+					this->row.erase(f);
+				else
+					f->value = v;
+			} else if (v != MatrixRow::default_value)
+				this->row.insert(f, MatrixElement<T>(index,v));
+		}
 	}
 };
 

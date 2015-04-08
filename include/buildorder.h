@@ -1,8 +1,7 @@
 #ifndef BUILDORDERH
 #define BUILDORDERH
 
-#include "matrix.h"
-#include "rules.h"
+#include "graph.h"
 #include "util.h"
 
 namespace BuildOrder

@@ -1,12 +1,12 @@
 #include "../include/graph.h"
 
-Graph::MultiGraph<Dependency> graph;
+BuildOrder::Rules::MultiGraph BuildOrder::Rules::graph;
 
-std::vector<Dependency> BuildOrder::Rules::value(unsigned needs, unsigned needed)
+std::vector<BuildOrder::Rules::Dependency> BuildOrder::Rules::value(unsigned needs, unsigned needed)
 {
 	std::vector<Dependency> ret(5);
 	for (unsigned i = 0; i < 5; i++)
-		ret.type = (relation_type) i;
+		ret[i].type = (relation_type) i;
 
 	for (unsigned j = 0; j < tasks[needs].costs.row.size(); j++)
 	{
@@ -108,13 +108,16 @@ std::vector<Dependency> BuildOrder::Rules::value(unsigned needs, unsigned needed
 			unsigned value = tasks[needed].produce.row[i].value;
 
 			if (idx == index)
+			{
 				ret[4].weight.set(idx, 1);
+				ret[4].bonus.set(idx, value);
+			}
 			else if (resourceValueLost[index].get(idx))
 				ret[4].event.set(idx, 1);
 		}
 	}
 
-	for (unsigned i = 0; i < 5; i++)
+	for (unsigned i = 0; i < ret.size(); i++)
 	{
 		if (ret[i].bonus.row.size())
 			continue;

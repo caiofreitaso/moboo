@@ -28,7 +28,7 @@ namespace BuildOrder
 
 	inline double drng(double min, double max)
 	{
-		unsigned diff = max - min;
+		double diff = max - min;
 		return (drng() * diff) + min;
 	}
 }

@@ -39,7 +39,7 @@ namespace BuildOrder
 			MatrixRow<unsigned> equivalence;
 		};
 
-		enum relation_type
+		/*enum relation_type
 		{
 			RT_COST,
 			RT_CONSUME,
@@ -62,7 +62,7 @@ namespace BuildOrder
 		};
 
 		void value(unsigned, unsigned, relation_type, Dependency const&);
-		inline double best_function_ever(double, double);
+		
 
 		struct Item {
 			unsigned task;
@@ -77,7 +77,7 @@ namespace BuildOrder
 
 			bool operator<(Item const& d) const
 			{ return task < d.task; }
-		};
+		};*/
 
 		extern std::vector<Task> tasks;
 		extern std::vector<Event> events;
@@ -86,7 +86,10 @@ namespace BuildOrder
 		extern std::vector<MatrixRow<unsigned> > taskValuePerEvent;
 		extern std::vector<MatrixRow<unsigned> > resourceValueLost;
 
-		class Forest {
+		bool fillsPrerequisite(unsigned task, unsigned resource, unsigned amount);
+		bool fillsBorrow(unsigned task, unsigned resource, unsigned amount);
+
+		/*class Forest {
 		public:
 			typedef typename std::set<Item>::const_iterator c_it;
 			typedef typename std::set<Dependency>::const_iterator d_it;
@@ -226,7 +229,7 @@ namespace BuildOrder
 		extern Forest maxima;
 		extern Forest costs;
 		extern Forest consumes;
-		extern Forest borrows;
+		extern Forest borrows;*/
 
 		extern unsigned mean_time;
 

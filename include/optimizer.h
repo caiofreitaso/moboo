@@ -28,7 +28,7 @@ namespace BuildOrder
 			unsigned greater_than;
 
 			constexpr Restriction()
-			: less_than(0), greater_than(0)
+			: less_than(-1), greater_than(0)
 			{ }
 
 
@@ -37,10 +37,13 @@ namespace BuildOrder
 			{ }
 
 			constexpr operator bool() const
-			{ return less_than > 0 || greater_than > 0; }
+			{ return less_than > 0 || greater_than < -1; }
 
 			constexpr bool operator==(Restriction r) const
 			{ return less_than == r.less_than && greater_than == r. greater_than; }
+
+			constexpr bool operator!=(Restriction r) const
+			{ return !(*this == r); }
 		};
 
 
@@ -117,7 +120,7 @@ namespace BuildOrder
 				ret << "t < " << maximum_time << "\n";
 				for (unsigned i = 0; i < restrictions[0].row.size(); i++)
 				{
-					if (restrictions[0].row[i].value.less_than)
+					if (restrictions[0].row[i].value.less_than != -1)
 					{
 						ret << "U" << restrictions[0].row[i].index << " < ";
 						ret << restrictions[0].row[i].value.less_than << "\n";
@@ -130,7 +133,7 @@ namespace BuildOrder
 				}
 				for (unsigned i = 0; i < restrictions[1].row.size(); i++)
 				{
-					if (restrictions[1].row[i].value.less_than)
+					if (restrictions[1].row[i].value.less_than != -1)
 					{
 						ret << "q" << restrictions[1].row[i].index << " < ";
 						ret << restrictions[1].row[i].value.less_than << "\n";
@@ -143,7 +146,7 @@ namespace BuildOrder
 				}
 				for (unsigned i = 0; i < restrictions[2].row.size(); i++)
 				{
-					if (restrictions[2].row[i].value.less_than)
+					if (restrictions[2].row[i].value.less_than != -1)
 					{
 						ret << "u" << restrictions[2].row[i].index << " < ";
 						ret << restrictions[2].row[i].value.less_than << "\n";

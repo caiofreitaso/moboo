@@ -1,8 +1,10 @@
 #ifndef CREATESOLUTIONH
 #define CREATESOLUTIONH
 
+#include <cmath>
 #include <bitset>
 #include <limits>
+#include <queue>
 #include "optimizer.h"
 
 const double DOUBLE_NINF = -std::numeric_limits<double>::infinity();
@@ -66,20 +68,26 @@ namespace BuildOrder
 		}
 
 		void passWeight(double value, unsigned task,
-						std::vector<Rules::Forest> const& g,
-						std::vector<double> const& w,
+						Rules::MultiGraph const& g,
 						std::vector<double>& final,
 						std::vector<bool> const& p,
 						std::vector<std::bitset<5> >& done);
+
+		void pruneGraph(Rules::MultiGraph& g,
+						GameState initial,
+						Rules::relation_type r,
+						bool (*func)(unsigned, unsigned, unsigned));
+		void getValues(Rules::MultiGraph& g, GameState initial,
+					   std::vector<double> value);
 
 		std::vector<double> taskWeights(GameState, Optimizer const&,
 										double objective_multiplier = 3.0,
 										double restriction_multiplier = 4.0,
 										double prerequisite_multiplier = 2.0,
-										double cost_multiplier = 1.5,
+										double cost_multiplier = 0.5,
 										double maximum_multiplier = 1.0);
 
-		void mapPrerequisites(Rules::Forest::c_it,
+		/*void mapPrerequisites(Rules::Forest::c_it,
 							  GameState,
 							  std::vector<double> const&,
 							  std::vector<double>&);
@@ -89,13 +97,13 @@ namespace BuildOrder
 									 double restriction_multiplier = 4.0,
 									 double prerequisite_multiplier = 2.0,
 									 double cost_multiplier = 1.5,
-									 double maximum_multiplier = 1.0);
+									 double maximum_multiplier = 1.0);*/
 
 		bool nextTask(Solution&, GameState, Optimizer const&,
 					  double objective_multiplier = 3.0,
 					  double restriction_multiplier = 4.0,
 					  double prerequisite_multiplier = 2.0,
-					  double cost_multiplier = 1.5,
+					  double cost_multiplier = 0.5,
 					  double maximum_multiplier = 1.0);
 
 		Solution create(GameState, Optimizer const&, double stop = 0.1);
