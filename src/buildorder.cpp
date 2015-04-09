@@ -39,21 +39,45 @@ void BuildOrder::initState(GameState& s, char const* f)
 
 	file.open(f);
 
-	std::getline(file,buffer);
+	unsigned idx;
+	unsigned v;
+
+	do
+		std::getline(file,buffer);
+	while(buffer[0] == '#' || buffer.size() == 0);
+
+	ss.clear();
 	ss.str(buffer);
 
-	unsigned v;
-	for (unsigned i = 0; i < Rules::resources.size(); i++)
+	for(unsigned j,v; !ss.eof(); )
 	{
+		long p = (long)ss.tellg();
+		
+		ss >> j;
+		while (ss.fail())
+		{
+			ss.clear();
+			ss.seekg(p+1);
+			ss >> j;
+		}
+		
+		p = (long)ss.tellg();
 		ss >> v;
-		s.resources[i].quantity += v;
+		while (ss.fail())
+		{
+			ss.clear();
+			ss.seekg(p+1);
+			ss >> v;
+		}
+
+		s.resources[j].quantity += v;
 
 		for (unsigned k = 0; k < Rules::events.size(); k++)
-			if (Rules::events[k].trigger == i)
+			if (Rules::events[k].trigger == j)
 				for (unsigned q = 0; q < v; q++)
 				{
 					if (Rules::events[k].time)
-						s.resources[i].events.push_back(EventPointer(s.time, k));
+						s.resources[j].events.push_back(EventPointer(s.time, k));
 					else
 						s.applyEvent(k);
 				}
@@ -62,11 +86,29 @@ void BuildOrder::initState(GameState& s, char const* f)
 	std::getline(file,buffer);
 	ss.clear();
 	ss.str(buffer);
-
-	for (unsigned i = 0; i < Rules::resources.size(); i++)
+	for(unsigned j,v; !ss.eof(); )
 	{
+		long p = (long)ss.tellg();
+		
+		ss >> j;
+		while (ss.fail())
+		{
+			ss.clear();
+			ss.seekg(p+1);
+			ss >> j;
+		}
+		
+		p = (long)ss.tellg();
 		ss >> v;
-		s.resources[i].used = v;
+		while (ss.fail())
+		{
+			ss.clear();
+			ss.seekg(p+1);
+			ss >> v;
+		}
+
+		for (unsigned i = 0; i < v; i++)
+			s.consumeResource(j);
 	}
 
 	file.close();
