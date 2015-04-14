@@ -64,6 +64,15 @@ namespace BuildOrder
 		std::vector<Resource> resources;
 		EventList tasks;
 
+		void print() const
+		{
+			std::cout << "TIME: " << time << "\n";
+			
+			for (unsigned i = 0; i < resources.size(); i++)
+				if (resources[i].usable())
+					std::cout << i << ": " << resources[i].usable() << "\n";
+		}
+
 		bool hasPrerequisites(unsigned t) const
 		{
 			for (unsigned i = 0; i < Rules::tasks[t].prerequisite.row.size(); i++)

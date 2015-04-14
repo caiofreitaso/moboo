@@ -61,38 +61,22 @@ int main(int argc, char const *argv[])
 	}
 
 	BuildOrder::GameState state;
+	std::vector<BuildOrder::Optimizer::Population> total;
+	BuildOrder::Optimizer::Population ret, front;
 
+	std::chrono::time_point<std::chrono::system_clock> a;
+
+	/////////////////////////////////////////////////////
 	BuildOrder::Rules::init(argv[1]);
 	BuildOrder::Rules::initGraph();
 	
 	BuildOrder::createState(state);
 	BuildOrder::initState(state, argv[2]);
+	std::cout << "INITIAL STATE:\n";
+	state.print();
+	std::cout << "--------------\n\n";
+	/////////////////////////////////////////////////////
 
-	std::cout << "TIME: " << state.time << "\n";
-	std::cout << "MINERALS: " << state.resources[0].usable() << "\n";
-	std::cout << "GAS: " << state.resources[1].usable() << "\n";
-	std::cout << "LARVAE: " << state.resources[3].usable() << "\n";
-	std::cout << "SUPPLY: " << state.quantity(2) << "\n";
-	std::cout << "SUPPLY USED: " << state.resources[2].used << "\n";
-	
-	for (unsigned i = 0; i < state.resources.size(); i++)
-		if (state.resources[i].usable())
-			std::cout << i << ": " << state.resources[i].usable() << "\n";
-
-	/*std::cout << "----------------------------\n";
-	BuildOrder::Rules::prerequisites.print();
-	std::cout << "----------------------------\n";
-	BuildOrder::Rules::borrows.print();
-	std::cout << "----------------------------\n";
-	BuildOrder::Rules::costs.print();
-	std::cout << "----------------------------\n";
-	BuildOrder::Rules::consumes.print();
-	std::cout << "----------------------------\n";
-	BuildOrder::Rules::maxima.print();
-	std::cout << "----------------------------\n";*/
-
-	std::vector<BuildOrder::Optimizer::Population> total;
-	BuildOrder::Optimizer::Population ret, front;
 	#ifdef OPT_NSGA2
 	BuildOrder::Optimizer::NSGA2 solver(50,50);
 	#else
@@ -100,33 +84,13 @@ int main(int argc, char const *argv[])
 	//BuildOrder::Optimizer::ExactOpt solver(1000);
 	#endif
 
-	#ifdef ONESWAP
 	solver.neighborhood = BuildOrder::Optimizer::one_swap;
-	#else
-	solver.neighborhood = BuildOrder::Optimizer::one_swap;//swap_and_delete;
-	#endif
 	
 	solver.stop_chance = 0.3;
 	BuildOrder::Optimizer::initOptimizer(solver,argv[3]);
 	std::cout << solver.print();
-	/*solver.maximum_time = 300;
-	solver.objectives[0].set(0, BuildOrder::Optimizer::MAXIMIZE);
-	solver.objectives[0].set(7, BuildOrder::Optimizer::MAXIMIZE);
-	solver.restrictions[0].set(7, BuildOrder::Optimizer::Restriction(0,1));*/
-//	solver.objectives[0].set(6, BuildOrder::Optimizer::MAXIMIZE);
-//	solver.restrictions[0].set(6, BuildOrder::Optimizer::Restriction(0,1));
 	solver.update();
 
-	BuildOrder::Optimizer::Solution s;
-	s.orders.push_back(1);s.orders.push_back(1);
-	s.orders.push_back(14);s.orders.push_back(1);
-	s.orders.push_back(13);s.orders.push_back(3);
-	s.orders.push_back(0);s.orders.push_back(0);
-	s.orders.push_back(1);s.orders.push_back(1);
-	s.orders.push_back(23);
-	s.update(state,solver.maximum_time);
-
-	std::chrono::time_point<std::chrono::system_clock> a;
 
 	for (unsigned i = 0; i < 30; i++)
 	{
