@@ -266,6 +266,14 @@ void BuildOrder::Objective::updateBorrow(BuildOrder& build, GameState& init)
 
 		init.resources[index].borrowed += value;
 	}
+
+	for (unsigned i = 0; i < Rules::tasks[build.front().task].consume.row.size(); i++)
+	{
+		unsigned index = Rules::tasks[build.front().task].consume.row[i].index;
+		unsigned value = Rules::tasks[build.front().task].consume.row[i].value;
+
+		init.resources[index].borrowed += value;
+	}
 }
 
 void BuildOrder::Objective::buildWhatYouCan(BuildOrder& build, GameState& init, unsigned& last, remaining_list& listTime)
@@ -298,6 +306,7 @@ void BuildOrder::Objective::aftermath(GameState& init, unsigned type)
 		
 		for (unsigned k = 0; k < value; k++)
 			init.consumeResource(index);
+		init.resources[index].borrowed -= value;
 	}
 
 	for (unsigned k = 0; k < Rules::tasks[type].produce.row.size(); k++)
