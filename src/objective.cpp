@@ -1,6 +1,6 @@
 #include "../include/objective.h"
 
-bool BuildOrder::maximumOverflow(unsigned task, GameState s)
+bool BuildOrder::maximumOverflow(unsigned task, GameState const& s)
 {
 	for (unsigned i = 0; i < Rules::tasks[task].produce.row.size(); i++)
 	{
@@ -31,7 +31,7 @@ bool BuildOrder::maximumOverflow(unsigned task, GameState s)
 	return false;
 }
 
-bool BuildOrder::hasPrerequisites(unsigned task, GameState s)
+bool BuildOrder::hasPrerequisites(unsigned task, GameState const& s)
 {
 	//Do we exceed the maximum for a certain item?
 	if (maximumOverflow(task, s))
@@ -60,7 +60,7 @@ bool BuildOrder::hasPrerequisites(unsigned task, GameState s)
 	return true;
 }
 
-bool BuildOrder::can(unsigned task, GameState s)
+bool BuildOrder::can(unsigned task, GameState const& s)
 {
 	if (!hasPrerequisites(task,s))
 		return false;
@@ -105,35 +105,34 @@ bool BuildOrder::can(unsigned task, GameState s)
 	return true;
 }
 
-bool BuildOrder::can(TaskPointer t, GameState s)
+bool BuildOrder::can(TaskPointer t, GameState const& s)
 {
 	return can(t.task,s);
 }
 
-void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState& init)
+void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState const& init)
 {
-	for (unsigned i = 0; i < Rules::events.size(); i++)
+	for (auto event : Rules::events)
 	{
-		Rules::Event& event = Rules::events[i];
-		EventList& events = init.resources[event.trigger].events;
+		EventList const& events = init.resources[event.trigger].events;
 
 		bool done = false;
 
 		if (events.size())
 		{
-			for (unsigned k = 0; k < event.bonus.row.size(); k++)
-				r[event.bonus.row[k].index] = false;
+			for (auto e : event.bonus.row)
+				r[e.index] = false;
 			done = true;
 		}
 
-		for (unsigned j = 0; j < init.tasks.size(); j++)
+		for (auto t : init.tasks)
 			if (!done)
 			{
-				unsigned produce = Rules::tasks[init.tasks[j].type].produce.get(event.trigger);
+				unsigned produce = Rules::tasks[t.type].produce.get(event.trigger);
 				if (produce)
 				{
-					for (unsigned k = 0; k < event.bonus.row.size(); k++)
-						r[event.bonus.row[k].index] = false;
+					for (auto e : event.bonus.row)
+						r[e.index] = false;
 					done = true;
 				}
 			} else
@@ -142,10 +141,10 @@ void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState& i
 }
 
 void BuildOrder::Objective::afterStack(std::vector<unsigned>& final,
-	std::vector<unsigned>& finalQ, GameState& init)
+	std::vector<unsigned>& finalQ, GameState const& init)
 {
 	for (unsigned i = 0; i < final.size(); i++)
-		final[i] = init.resources[i].usable();
+		final[i] = init.resources[i].usableB();
 	for (unsigned i = 0; i < finalQ.size(); i++)
 		finalQ[i] = init.resources[i].quantity;
 
@@ -174,7 +173,7 @@ void BuildOrder::Objective::afterStack(std::vector<unsigned>& final,
 }
 
 bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r,
-	std::vector<unsigned>& final, unsigned t, GameState& init)
+	std::vector<unsigned>& final, unsigned t)
 {
 	std::vector<int> values(r.size(), 0);
 
@@ -218,12 +217,12 @@ bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r,
 	return true;
 }
 
-bool BuildOrder::Objective::possible(BuildOrder& build, GameState& init)
+bool BuildOrder::Objective::possible(BuildOrder& build, GameState const& init)
 {
 	return possible(build[0].task, init);
 }
 
-bool BuildOrder::Objective::possible(unsigned task, GameState& init)
+bool BuildOrder::Objective::possible(unsigned task, GameState const& init)
 {
 	std::vector<bool> should_I_Care(Rules::resources.size(),true);
 	std::vector<unsigned> final(Rules::resources.size(), 0);
@@ -236,7 +235,7 @@ bool BuildOrder::Objective::possible(unsigned task, GameState& init)
 		return false;
 	if (!GameState::hasMaximum(task,final))
 		return false;
-	if (!prerequisiteInStack(should_I_Care, final, task, init))
+	if (!prerequisiteInStack(should_I_Care, final, task))
 		return false;
 
 	return true;
@@ -377,13 +376,16 @@ void BuildOrder::Objective::updateOngoingEvents(GameState& init, remaining_list&
 		}
 }
 
-unsigned BuildOrder::Objective::update(GameState& init, remaining_list& listTime, unsigned maximum_time)
+void BuildOrder::Objective::update(GameState& init, remaining_list& listTime, remaining_list& listEvents)
 {
-	remaining_list listEvents;
-
 	Objective::updateOngoingTasks(init, listTime);
 	Objective::updateOngoingEvents(init, listEvents);
 
+}
+
+unsigned BuildOrder::Objective::nextTime(GameState& init, remaining_list& listTime, remaining_list& listEvents,
+	unsigned maximum_time, unsigned size)
+{
 	unsigned min = -1;
 	for (unsigned i = 0; i < listTime.size(); i++)
 		if (listTime[i].time_remaining < min)
@@ -403,12 +405,16 @@ unsigned BuildOrder::Objective::update(GameState& init, remaining_list& listTime
 			min = listEvents[i].time_remaining;
 
 
-	if (maximum_time)
+	if (listTime.size() || size)
 	{
-		unsigned time_to_max = maximum_time - init.time;
-		if (time_to_max < min)
-			min = time_to_max;
-	}
+		if (maximum_time)
+		{
+			unsigned time_to_max = maximum_time - init.time;
+			if (time_to_max < min)
+				min = time_to_max;
+		}
+	} else
+		min = 0;
 
 	for (unsigned i = 0; i < listTime.size(); i++)
 		listTime[i].time_remaining -= min;
@@ -418,7 +424,7 @@ unsigned BuildOrder::Objective::update(GameState& init, remaining_list& listTime
 
 BuildOrder::GameState BuildOrder::makespan(GameState init, BuildOrder& original, unsigned maximum_time)
 {
-	if (Rules::tasks.empty() || Rules::events.empty())
+	if (Rules::tasks.empty())
 		return init;
 
 	BuildOrder build(original);
@@ -438,9 +444,12 @@ BuildOrder::GameState BuildOrder::makespan(GameState init, BuildOrder& original,
 			last_size = build.size();
 		}
 		
+		Objective::remaining_list listEvents;
+		
+		Objective::update(init, listTime, listEvents);
 		Objective::buildWhatYouCan(build, init, last, listTime);
 		
-		unsigned min = Objective::update(init, listTime, maximum_time);
+		unsigned min = Objective::nextTime(init,listTime,listEvents,maximum_time,build.size());
 
 		if (build.front().delay > last)
 		{
@@ -448,7 +457,6 @@ BuildOrder::GameState BuildOrder::makespan(GameState init, BuildOrder& original,
 			if (time_to_task < min)
 				min = time_to_task;
 		}
-
 
 
 		init.time += min;
@@ -460,7 +468,9 @@ BuildOrder::GameState BuildOrder::makespan(GameState init, BuildOrder& original,
 		if (init.time >= maximum_time && maximum_time)
 			break;
 
-		init.time += Objective::update(init, listTime, maximum_time);
+		Objective::remaining_list listEvents;
+		Objective::update(init, listTime, listEvents);
+		init.time += Objective::nextTime(init,listTime,listEvents,maximum_time,0);
 	}
 
 	if (build.size())

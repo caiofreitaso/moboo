@@ -21,10 +21,12 @@ void BuildOrder::Optimizer::Knee_Archiver::knees (
 		_v_obj = min.size();
 
 		unsigned denom = _v_size;
-		denom /= _v_obj-1;
+		if (_v_obj > 1)
+			denom /= _v_obj-1;
 
 		double delta = 1;
-		delta /= denom;
+		if (_v_obj > 1)
+			delta /= denom;
 		
 		double v;
 		_values.clear();

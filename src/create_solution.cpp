@@ -157,11 +157,11 @@ void BuildOrder::Optimizer::getValues(Rules::MultiGraph& g,
 
 				double deno;
 				if (d.type == Rules::RT_MAXIMUM)
-					deno = initial.maximum(res) - initial.usable(res);
+					deno = initial.maximum(res) - initial.usableB(res);
 				else if (d.type == Rules::RT_PREREQUISITE)
-					deno = Rules::tasks[vi].prerequisite.get(res) - initial.usable(res);
+					deno = Rules::tasks[vi].prerequisite.get(res) - initial.usableB(res);
 				else
-					deno = initial.usable(res);
+					deno = initial.usableB(res);
 
 				deno += d.bonus[k].value;
 				deno = val/deno;
@@ -267,7 +267,7 @@ bool BuildOrder::Optimizer::nextTask(Solution& s, GameState init, Optimizer cons
 	double objective_multiplier, double restriction_multiplier, double prerequisite_multiplier,
 	double cost_multiplier, double maximum_multiplier)
 {
-	std::vector<double> taskValue, tv;
+	std::vector<double> taskValue;
 
 	taskValue = taskWeights(s.final_state, solver,
 						 objective_multiplier,
@@ -275,13 +275,6 @@ bool BuildOrder::Optimizer::nextTask(Solution& s, GameState init, Optimizer cons
 						 prerequisite_multiplier,
 						 cost_multiplier,
 						 maximum_multiplier);
-
-	/*tv = mapGoals(s.final_state, solver,
-				 objective_multiplier,
-				 restriction_multiplier,
-				 prerequisite_multiplier,
-				 cost_multiplier,
-				 maximum_multiplier);*/
 
 	double dice = drng();
 
@@ -344,9 +337,6 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create(GameState initial,
 			continue;
 		}
 
-		if (ret.orders.size() == 200)
-			break;
-
 		double dice = drng();
 
 		if (dice < stop)
@@ -401,4 +391,176 @@ void BuildOrder::Optimizer::trim(Solution& s, Optimizer const& solver, GameState
 		tmp.orders.pop_back();
 		tmp.update(init, solver.maximum_time);
 	}
+}
+
+BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create_exact(GameState const& initial,
+	Optimizer const& solver)
+{
+	Solution ret;
+	ret.final_state = initial;
+
+	std::vector<unsigned> target_tasks;
+
+	//for each restricton: use branch-and-bound to reach the goal
+	for (auto r : solver.restrictions[0].row)
+	{
+		unsigned target = r.index;
+		unsigned gt = r.value.greater_than;
+		unsigned lt = r.value.less_than;
+
+		std::vector<unsigned> candidates;
+		for (unsigned i = 0; i < Rules::tasks.size(); i++)
+			if (Rules::tasks[i].produce.get(target))
+				candidates.push_back(i);
+			else if (Rules::taskProduceByEvent[i].get(target))
+				candidates.push_back(i);
+		
+		Solution s = branchnbound(initial,ret, candidates, target,gt,lt, -1, solver.maximum_time);
+	}
+
+	return ret;
+}
+
+BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState const& initial, Solution s,
+	std::vector<unsigned> const& target_tasks, unsigned target, unsigned gt, unsigned lt, unsigned last,
+	unsigned maximum_time)
+{
+	static Solution ret;
+	static unsigned MTIME;
+	if (last == -1)
+		MTIME = maximum_time;
+
+	std::vector<double> taskValue(Rules::tasks.size(), 0);
+
+	for(auto t : target_tasks)
+		taskValue[t] = 100;
+
+	{
+		Rules::MultiGraph actual(Rules::graph);
+		
+		//PREREQUISITE EDGES PRUNING
+		pruneGraph(actual, s.final_state, Rules::RT_PREREQUISITE, Rules::fillsPrerequisite);
+		//BORROW EDGES PRUNING
+		pruneGraph(actual, s.final_state, Rules::RT_BORROW, Rules::fillsBorrow);
+
+		{
+			std::vector<double> weights(5,0.5);
+			weights[3] = weights[4] = 8000;
+			getValues(actual, s.final_state, weights);
+		}
+
+		{
+			std::vector<bool> possibles(Rules::tasks.size(), false);
+			std::vector<std::bitset<5> > done(Rules::tasks.size());
+
+			for (unsigned t = 0; t < Rules::tasks.size(); t++)
+				possibles[t] = ::BuildOrder::Objective::possible(t,s.final_state);
+
+			for (auto t : target_tasks)
+			{
+				passWeight( 100, t, actual, taskValue, possibles, done );
+				for (auto d : done)
+					d.reset();
+			}
+
+			for (unsigned t = 0; t < Rules::tasks.size(); t++)
+				if (!possibles[t])
+					taskValue[t] = DOUBLE_NINF;
+		}
+	}
+
+	Population nodes;
+
+	{
+		struct tmp
+		{ double a; unsigned i; bool operator<(tmp s) const { return a > s.a; } };
+		std::vector<tmp> list;
+		list.reserve(taskValue.size());
+
+		for (unsigned i = 0; i < taskValue.size(); i++)
+			if (taskValue[i] > DOUBLE_NINF)
+			{
+				tmp t;
+				t.a = taskValue[i];
+				t.i = i;
+				list.push_back(t);
+			}
+
+		std::sort(list.begin(), list.end());
+
+		for (auto i : list)
+		{
+			Solution n = s;
+			n.orders.push_back(i.i);
+			n.update(initial, maximum_time);
+
+			if (n.orders.size() > s.orders.size())
+				#pragma omp critical
+				if (n.final_state.time <= MTIME)
+				{
+					if (n.final_state.resources[target].usable() >= gt && n.final_state.resources[target].usable() <= lt)
+					{
+						MTIME = n.final_state.time;
+						ret = n;
+						print(ret.orders);
+						std::cout << "Time: " << MTIME << "\n";
+					} else
+						nodes.push_back(n);
+				}
+		}
+	}
+
+	#pragma omp parallel for num_threads(nodes.size())
+	for (unsigned i = 0; i < nodes.size(); i++)
+		branchnbound(initial,nodes[i],target_tasks,target,gt,lt,nodes[i].orders.back().task,MTIME);
+
+	return ret;
+}
+
+BuildOrder::Optimizer::Population BuildOrder::Optimizer::local_search(Population (*neighborhood)(Solution const&), Population const& p, unsigned childs, Optimizer const& opt, GameState init)
+{
+	Population neighbors(p), l(p);
+
+	for(; neighbors == l; )
+	{
+		l = neighbors;
+		neighbors.clear();
+
+		#pragma omp parallel for
+		for (unsigned k = 0; k < l.size(); k++)
+		{
+			Population n = local_search(neighborhood,l[k],childs,opt,init);
+
+			for (unsigned t = 0; t < n.size(); t++)
+				#pragma omp critical
+				neighbors.push_back(n[t]);
+			#pragma omp critical
+			neighbors = opt.nonDominated(neighbors);
+		}
+	}
+
+	return neighbors;
+}
+
+BuildOrder::Optimizer::Population BuildOrder::Optimizer::local_search(Population (*neighborhood)(Solution const&), Solution const& p, unsigned childs, Optimizer const& opt, GameState init)
+{
+	Population neighbors;
+
+	#pragma omp parallel for
+	for (unsigned c = 0; c < childs; c++)
+	{
+		Population n = neighborhood(p);
+		for (unsigned t = 0; t < n.size(); t++)
+		{
+			n[t].update(init, opt.maximum_time);
+
+			make_valid(n[t], opt, init);
+			trim(n[t], opt, init);
+
+			#pragma omp critical
+			neighbors.push_back(n[t]);
+		}
+	}
+
+	return neighbors;
 }

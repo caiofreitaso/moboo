@@ -4,14 +4,9 @@ std::vector<BuildOrder::Rules::Task> BuildOrder::Rules::tasks;
 std::vector<BuildOrder::Rules::Event> BuildOrder::Rules::events;
 std::vector<BuildOrder::Rules::Resource> BuildOrder::Rules::resources;
 
+std::vector<MatrixRow<unsigned> > BuildOrder::Rules::taskProduceByEvent;
 std::vector<MatrixRow<unsigned> > BuildOrder::Rules::taskValuePerEvent;
 std::vector<MatrixRow<unsigned> > BuildOrder::Rules::resourceValueLost;
-
-/*BuildOrder::Rules::Forest BuildOrder::Rules::prerequisites;
-BuildOrder::Rules::Forest BuildOrder::Rules::maxima;
-BuildOrder::Rules::Forest BuildOrder::Rules::costs;
-BuildOrder::Rules::Forest BuildOrder::Rules::consumes;
-BuildOrder::Rules::Forest BuildOrder::Rules::borrows;*/
 
 unsigned BuildOrder::Rules::mean_time = 0;
 
@@ -48,11 +43,16 @@ void BuildOrder::Rules::init(char const* filename)
 		tasks.reserve(tks_sz);
 		events.reserve(evt_sz);
 
+		taskProduceByEvent.reserve(tks_sz);
+
 		taskValuePerEvent.reserve(res_sz);
 		resourceValueLost.reserve(res_sz);
 
 		for (unsigned i = 0; i < tasks.capacity(); i++)
+		{
 			tasks.push_back(Task());
+			taskProduceByEvent.push_back(MatrixRow<unsigned>());
+		}
 
 		for (unsigned i = 0; i < events.capacity(); i++)
 			events.push_back(Event());
@@ -391,6 +391,7 @@ void BuildOrder::Rules::init(char const* filename)
 	}
 
 	//EVENTS
+	if (events.size())
 	{
 
 		//TIME
@@ -469,135 +470,9 @@ void BuildOrder::Rules::init(char const* filename)
 
 			for (unsigned k = 0; k < tasks.size(); k++)
 				if (tasks[k].produce.get(events[i].trigger))
+				{
 					taskValuePerEvent[index].set(k, 1);
+					taskProduceByEvent[k].set(index, 1);
+				}
 		}
-
-	/*prerequisites.create(RT_PREREQUISITE);
-	maxima.create(RT_MAXIMUM);
-	costs.create(RT_COST);
-	consumes.create(RT_CONSUME);
-	borrows.create(RT_BORROW);*/
 }
-
-/*void BuildOrder::Rules::value(unsigned needed, unsigned needs, relation_type p, Dependency const& d)
-{
-	switch(p)
-	{
-		case RT_COST:
-			for (unsigned j = 0; j < tasks[needs].costs.row.size(); j++)
-			{
-				unsigned idx = tasks[needs].costs.row[j].index;
-				int val = tasks[needs].costs.row[j].value;
-
-				if (val > 0)
-					for (unsigned i = 0; i < tasks[needed].produce.row.size(); i++)
-					{
-						unsigned index = tasks[needed].produce.row[i].index;
-						unsigned value = tasks[needed].produce.row[i].value;
-
-						if (idx == index)
-						{
-							d.w.set(idx, best_function_ever(value, val));
-							d.bonus.set(idx, value);
-						}
-
-						if (resourceValueLost[index].get(idx))
-							d.e.set(idx, 1.5);
-					}
-			}
-			break;
-		case RT_CONSUME:
-			for (unsigned j = 0; j < tasks[needs].consume.row.size(); j++)
-			{
-				unsigned idx = tasks[needs].consume.row[j].index;
-				unsigned val = tasks[needs].consume.row[j].value;
-
-				for (unsigned i = 0; i < tasks[needed].produce.row.size(); i++)
-				{
-					unsigned index = tasks[needed].produce.row[i].index;
-					unsigned value = tasks[needed].produce.row[i].value;
-			
-					if (idx == index)
-					{
-						d.w.set(idx, best_function_ever(value, val));
-						d.bonus.set(idx, value);
-					}
-
-					if (resourceValueLost[index].get(idx))
-						d.e.set(idx, 1.5);
-				}
-			}
-			break;
-		case RT_MAXIMUM:
-			for (unsigned j = 0; j < tasks[needs].produce.row.size(); j++)
-			{
-				unsigned idx = tasks[needs].produce.row[j].index;
-				unsigned val = tasks[needs].produce.row[j].value;
-
-				for (unsigned i = 0; i < tasks[needed].produce.row.size(); i++)
-				{
-					unsigned index = tasks[needed].produce.row[i].index;
-					unsigned value = tasks[needed].produce.row[i].value;
-					
-					unsigned max = resources[idx].maximum_per_resource.get(index);
-					if (max)
-					{
-						d.bonus.set(idx, max);
-						d.w.set(idx, best_function_ever(max, value));
-					}
-
-					for (unsigned k = 0; k < resources[idx].maximum_per_resource.row.size(); k++)
-					{
-						unsigned r_idx = resources[idx].maximum_per_resource.row[k].index;
-						if (resourceValueLost[index].get(r_idx))
-							d.e.set(idx, 1.5);
-					}
-				}
-			}
-			break;
-		case RT_PREREQUISITE:
-			for (unsigned j = 0; j < tasks[needs].prerequisite.row.size(); j++)
-			{
-				unsigned idx = tasks[needs].prerequisite.row[j].index;
-				unsigned val = tasks[needs].prerequisite.row[j].value;
-
-				for (unsigned i = 0; i < tasks[needed].produce.row.size(); i++)
-				{
-					unsigned index = tasks[needed].produce.row[i].index;
-					unsigned value = tasks[needed].produce.row[i].value;
-
-					if (idx == index)
-						d.w.set(idx, 1);
-					else if (resourceValueLost[index].get(idx))
-						d.e.set(idx, 1);
-				}
-			}
-			break;
-		case RT_BORROW:
-			for (unsigned j = 0; j < tasks[needs].borrow.row.size(); j++)
-			{
-				unsigned idx = tasks[needs].borrow.row[j].index;
-				unsigned val = tasks[needs].borrow.row[j].value;
-
-				for (unsigned i = 0; i < tasks[needed].produce.row.size(); i++)
-				{
-					unsigned index = tasks[needed].produce.row[i].index;
-					unsigned value = tasks[needed].produce.row[i].value;
-
-					if (idx == index)
-					{
-						d.w.set(idx, best_function_ever(value, val));
-						d.bonus.set(idx, value);
-					}
-					else if (resourceValueLost[index].get(idx))
-						d.e.set(idx, 1);
-				}
-			}
-			break;		
-	}
-}
-
-double BuildOrder::Rules::best_function_ever(double a, double b)
-{
-	return a * tanh(a/b);
-}*/

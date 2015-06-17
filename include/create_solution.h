@@ -87,18 +87,6 @@ namespace BuildOrder
 										double cost_multiplier = 0.5,
 										double maximum_multiplier = 1.0);
 
-		/*void mapPrerequisites(Rules::Forest::c_it,
-							  GameState,
-							  std::vector<double> const&,
-							  std::vector<double>&);
-
-		std::vector<double> mapGoals(GameState, Optimizer const&,
-									 double objective_multiplier = 3.0,
-									 double restriction_multiplier = 4.0,
-									 double prerequisite_multiplier = 2.0,
-									 double cost_multiplier = 1.5,
-									 double maximum_multiplier = 1.0);*/
-
 		bool nextTask(Solution&, GameState, Optimizer const&,
 					  double objective_multiplier = 3.0,
 					  double restriction_multiplier = 4.0,
@@ -107,9 +95,15 @@ namespace BuildOrder
 					  double maximum_multiplier = 1.0);
 
 		Solution create(GameState, Optimizer const&, double stop = 0.1);
+		Solution create_exact(GameState const&, Optimizer const&);
+		Solution branchnbound(GameState const&, Solution, std::vector<unsigned> const&, unsigned, unsigned, unsigned, unsigned, unsigned);
+		void getprerequisites(unsigned, std::vector<unsigned>&, Rules::MultiGraph const&);
 
 		void make_valid(Solution&, Optimizer const&, GameState const&);
 		void trim(Solution&, Optimizer const&, GameState const&);
+
+		Population local_search(Population (*neighborhood)(Solution const&), Population const& p, unsigned childs, Optimizer const& opt, GameState init);
+		Population local_search(Population (*neighborhood)(Solution const&), Solution const& p, unsigned childs, Optimizer const& opt, GameState init);
 	}
 }
 

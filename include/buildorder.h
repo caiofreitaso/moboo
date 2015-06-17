@@ -26,6 +26,14 @@ namespace BuildOrder
 		TaskPointer(unsigned t, unsigned d)
 		: task(t), delay(d)
 		{ }
+
+		~TaskPointer() { }
+
+		TaskPointer& operator=(TaskPointer t)
+		{
+			std::swap(task,t.task);
+			std::swap(delay,t.delay);
+		}
 	};
 
 	struct EventPointer {
@@ -36,9 +44,21 @@ namespace BuildOrder
 		: start(0), type(0)
 		{ }
 
+		EventPointer(EventPointer const& e)
+		: start(e.start), type(e.type)
+		{ }
+
 		EventPointer(unsigned s, unsigned t)
 		: start(s), type(t)
 		{ }
+
+		~EventPointer() { }
+
+		EventPointer& operator=(EventPointer t)
+		{
+			std::swap(start,t.start);
+			std::swap(type,t.type);
+		}
 	};
 
 	typedef std::vector<TaskPointer> BuildOrder;
@@ -63,6 +83,9 @@ namespace BuildOrder
 
 		std::vector<Resource> resources;
 		EventList tasks;
+
+		GameState() { }
+		~GameState() { }
 
 		void print() const
 		{
@@ -99,6 +122,10 @@ namespace BuildOrder
 		int usable(unsigned index) const
 		{
 			return quantity(index) - resources[index].used;
+		}
+		int usableB(unsigned index) const
+		{
+			return usable(index) - resources[index].borrowed;
 		}
 
 		static bool hasOMaximum(unsigned task, std::vector<unsigned> r)

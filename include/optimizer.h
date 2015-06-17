@@ -67,7 +67,7 @@ namespace BuildOrder
 			:	time_as_objective(true),
 				stop_chance(1),
 				maximum_time(0),
-				neighborhood(delete_tail)
+				neighborhood(one_swap)
 			{ }
 
 			virtual Population optimize(GameState, unsigned) const = 0;
@@ -199,6 +199,8 @@ namespace BuildOrder
 		};
 
 		void initOptimizer(Optimizer&, char const*);
+
+		
 	}
 }
 

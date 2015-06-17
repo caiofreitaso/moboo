@@ -17,12 +17,10 @@ namespace BuildOrder
 
 		public:
 			AdaptativeGrid_Archiver(unsigned c, const Optimizer* o, unsigned g = 5)
-			: _gridLevels(g)
+			: _gridLevels(g), _uev(c), _region(c)
 			{
 				_capacity = c;
 				_data.reserve(c+1);
-				_region.resize(c);
-				_uev.resize(c);
 				_optimizer = o;
 			}
 

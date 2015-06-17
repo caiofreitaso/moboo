@@ -2,7 +2,7 @@
 #include "../include/knee.h"
 #include "../include/nsga2.h"
 #include "../include/mograsp.h"
-#include "../include/exact.h"
+#include "../include/ants.h"
 
 BuildOrder::Optimizer::Optimizer* optm = 0;
 unsigned iterations = 20;
@@ -61,12 +61,14 @@ int main(int argc, char const *argv[])
 	}
 
 	BuildOrder::GameState state;
+	BuildOrder::Optimizer::Solution test;
 	std::vector<BuildOrder::Optimizer::Population> total;
 	BuildOrder::Optimizer::Population ret, front;
 
 	std::chrono::time_point<std::chrono::system_clock> a;
 
 	/////////////////////////////////////////////////////
+	a = std::chrono::system_clock::now();
 	BuildOrder::Rules::init(argv[1]);
 	BuildOrder::Rules::initGraph();
 	
@@ -80,28 +82,60 @@ int main(int argc, char const *argv[])
 	#ifdef OPT_NSGA2
 	BuildOrder::Optimizer::NSGA2 solver(50,50);
 	#else
-	BuildOrder::Optimizer::MOGRASP solver(50, 1, 1);
+	BuildOrder::Optimizer::Ants solver(8, 5, 1, 1, 1, 0.3);
+	//BuildOrder::Optimizer::NSGA2 solver(8,5);
+	//BuildOrder::Optimizer::MOGRASP solver(8, 5, 1, 1);
 	//BuildOrder::Optimizer::ExactOpt solver(1000);
 	#endif
 
-	solver.neighborhood = BuildOrder::Optimizer::one_swap;
+	//solver.neighborhood = BuildOrder::Optimizer::one_swap;
+	//solver.neighborhood = BuildOrder::Optimizer::swap_and_delete;
 	
 	solver.stop_chance = 0.3;
 	BuildOrder::Optimizer::initOptimizer(solver,argv[3]);
 	std::cout << solver.print();
 	solver.update();
 
+	std::chrono::duration<double> tt = std::chrono::system_clock::now() - a;
+	std::cout << "\n--------------\nPREPROCESSING TIME = " << tt.count() << "\n--------------\n";
 
-	for (unsigned i = 0; i < 30; i++)
+	test.orders.push_back(14);test.orders.push_back(3);
+	test.update(state,solver.maximum_time);
+	BuildOrder::print(test.orders);
+
+	/*a = std::chrono::system_clock::now();
+	front.push_back(BuildOrder::Optimizer::create_exact(state,solver));
+	tt = std::chrono::system_clock::now() - a;
+	std::cout << "TIME = " << tt.count() << "\n";
+	print(front[0].orders);
+	a = std::chrono::system_clock::now();
+	for (unsigned i = 0; i < 100; i++)
+		ret.push_back(BuildOrder::Optimizer::create(state,solver,1));
+	tt = std::chrono::system_clock::now() - a;
+	std::cout << "TIME = " << tt.count() << "\n";
+	
+
+	front = solver.nonDominated(front);	
+	ret = solver.nonDominated(ret);
+
+	print(front[0].orders);
+	std::cout << "Time: " << front[0].final_state.time << "\n";
+
+	print(ret[0].orders);
+	std::cout << "Time: " << ret[0].final_state.time << "\n";
+
+	*/for (unsigned i = 0; i < 30; i++)
 	{
 		a = std::chrono::system_clock::now();
-		total.push_back(solver.optimize(state, 1));
+		auto lastfront = solver.optimize(state, 5);
+		total.push_back(lastfront);
 
-		std::chrono::duration<double> tt = std::chrono::system_clock::now() - a;
-		std::cout << "TIME = " << tt.count() << "\n";
+		tt = std::chrono::system_clock::now() - a;
+		double duration = tt.count();
+		std::cout << "TIME = " << duration << "\n";
 
-		for (unsigned k = 0; k < total.back().size(); k++)
-			std::cerr << solver.print(total.back()[k]) << "\n";
+		for (unsigned k = 0; k < lastfront.size(); k++)
+			std::cerr << solver.print(lastfront[k]) << "\n";
 
 		std::cerr << "\n";
 

@@ -152,7 +152,10 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 
 				s = P[P.size()-1][i] - _lb[i];
 				s *= _gridLevels;
-				s /= _ub[i] - _lb[i];
+				if (_ub[i] == _lb[i])
+					s /= _ub[i];
+				else
+					s /= _ub[i] - _lb[i];
 
 				region_index += s * offset;
 				offset *= _gridLevels;
@@ -237,9 +240,12 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 								candidates.push_back(j);
 
 			//ELIMINATE THE UNFORTUNATE
-			unsigned index = candidates[rng() % candidates.size()];
-			pop(_data, index);
-			pop(P, index);
+			if (candidates.size())
+			{
+				unsigned index = candidates[rng() % candidates.size()];
+				pop(_data, index);
+				pop(P, index);
+			}
 		}
 		else
 		{
@@ -283,6 +289,12 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 	//SET RANGE
 	for (unsigned i = 0; i < obj.size(); i++)
 		range[i] = max[i] - min[i];
+
+	if (_ub.size() == 0)
+	{
+		_ub.resize(obj.size());
+		_lb.resize(obj.size());
+	}
 
 	//UPDATE BOUNDARIES
 	for (unsigned i = 0; i < obj.size(); i++)

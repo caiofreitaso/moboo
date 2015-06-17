@@ -13,7 +13,7 @@ namespace BuildOrder
 			public:
 				unsigned archive_size;
 				unsigned creation_cycles;
-				unsigned parents;
+				double parents;
 				unsigned childs;
 
 				MOGRASP() :
@@ -24,8 +24,12 @@ namespace BuildOrder
 					archive_size(c*10),creation_cycles(c), parents(1),
 					childs(2)
 				{ }
-				MOGRASP(unsigned c, unsigned p, unsigned h) :
+				MOGRASP(unsigned c, double p, unsigned h) :
 					archive_size(c*10),creation_cycles(c), parents(p),
+					childs(h)
+				{ }
+				MOGRASP(unsigned a, unsigned c, double p, unsigned h) :
+					archive_size(a),creation_cycles(c), parents(p),
 					childs(h)
 				{ }
 

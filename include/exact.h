@@ -19,7 +19,7 @@ namespace BuildOrder
 
 				ExactOpt(unsigned pop_size) : population_size(pop_size) { }
 
-				virtual Population optimize(GameState initial, unsigned iterations) const
+				virtual Population optimize(GameState initial, unsigned iterations)
 				{
 					AdaptativeGrid_Archiver population(population_size,this);
 					Population previous, actual;

@@ -6,11 +6,11 @@
 namespace BuildOrder
 {
 
-	bool maximumOverflow(unsigned task, GameState s);
-	bool hasPrerequisites(unsigned task, GameState s);
+	bool maximumOverflow(unsigned task, GameState const&);
+	bool hasPrerequisites(unsigned task, GameState const&);
 
-	bool can(unsigned task, GameState s);
-	bool can(TaskPointer t, GameState s);
+	bool can(unsigned task, GameState const&);
+	bool can(TaskPointer t, GameState const&);
 
 	namespace Objective
 	{
@@ -25,11 +25,11 @@ namespace BuildOrder
 
 		typedef std::vector<time_helper> remaining_list;
 
-		void afterStack(std::vector<unsigned>&, std::vector<unsigned>&, GameState&);
-		bool prerequisiteInStack(std::vector<bool>&, std::vector<unsigned>&, unsigned, GameState&);
-		void resourcesByEvents(std::vector<bool>&, GameState&);
-		bool possible(BuildOrder&, GameState&);
-		bool possible(unsigned, GameState&);
+		void afterStack(std::vector<unsigned>&, std::vector<unsigned>&, GameState const&);
+		bool prerequisiteInStack(std::vector<bool>&, std::vector<unsigned>&, unsigned);
+		void resourcesByEvents(std::vector<bool>&, GameState const&);
+		bool possible(BuildOrder&, GameState const&);
+		bool possible(unsigned, GameState const&);
 
 		void updateCosts(BuildOrder&, GameState&);
 		void updateBorrow(BuildOrder&, GameState&);
@@ -41,7 +41,8 @@ namespace BuildOrder
 		void updateOngoingTasks(GameState&, remaining_list&);
 		void updateOngoingEvents(GameState&, remaining_list&);
 
-		unsigned update(GameState&, remaining_list& listTime, unsigned maximum_time);
+		void update(GameState&, remaining_list&, remaining_list&);
+		unsigned nextTime(GameState& init, remaining_list&, remaining_list&, unsigned, unsigned);
 	}
 
 	GameState makespan(GameState, BuildOrder& original, unsigned maximum_time = 0);

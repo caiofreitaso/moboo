@@ -12,6 +12,7 @@ struct MatrixElement {
 	unsigned index;
 	T value;
 
+	MatrixElement() : index(0), value(T()) { }
 	MatrixElement(unsigned i) : index(i), value(T()) { }
 	MatrixElement(unsigned i, T v) : index(i), value(v) { }
 	MatrixElement(MatrixElement const& e) : index(e.index), value(e.value) { }
