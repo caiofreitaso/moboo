@@ -2,8 +2,8 @@
 
 bool BuildOrder::Optimizer::Optimizer::dominates(Solution a, Solution b) const
 {
-	std::vector<unsigned> a_obj, b_obj;
-	std::vector<bool> min;
+	contiguous<unsigned> a_obj, b_obj;
+	contiguous<bool> min;
 
 	if (time_as_objective)
 	{
@@ -368,9 +368,9 @@ void BuildOrder::Optimizer::Optimizer::update()
 	}
 }
 
-std::vector<double> BuildOrder::Optimizer::Optimizer::initialMap(double o, double r, GameState initial) const
+contiguous<double> BuildOrder::Optimizer::Optimizer::initialMap(double o, double r, GameState initial) const
 {
-	std::vector<double> taskValue(_objV.size(),0);
+	contiguous<double> taskValue(_objV.size(),0);
 
 	//RESTRICTIONS
 	for (unsigned t = 0; t < taskValue.size(); t++)

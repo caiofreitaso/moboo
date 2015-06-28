@@ -69,18 +69,18 @@ namespace BuildOrder
 
 		void passWeight(double value, unsigned task,
 						Rules::MultiGraph const& g,
-						std::vector<double>& final,
-						std::vector<bool> const& p,
-						std::vector<std::bitset<5> >& done);
+						contiguous<double>& final,
+						contiguous<bool> const& p,
+						contiguous<std::bitset<5> >& done);
 
 		void pruneGraph(Rules::MultiGraph& g,
 						GameState initial,
 						Rules::relation_type r,
 						bool (*func)(unsigned, unsigned, unsigned));
 		void getValues(Rules::MultiGraph& g, GameState initial,
-					   std::vector<double> value);
+					   contiguous<double> value);
 
-		std::vector<double> taskWeights(GameState, Optimizer const&,
+		contiguous<double> taskWeights(GameState, Optimizer const&,
 										double objective_multiplier = 3.0,
 										double restriction_multiplier = 4.0,
 										double prerequisite_multiplier = 2.0,
@@ -95,9 +95,9 @@ namespace BuildOrder
 					  double maximum_multiplier = 1.0);
 
 		Solution create(GameState, Optimizer const&, double stop = 0.1);
-		Solution create_exact(GameState const&, Optimizer const&);
-		Solution branchnbound(GameState const&, Solution, std::vector<unsigned> const&, unsigned, unsigned, unsigned, unsigned, unsigned);
-		void getprerequisites(unsigned, std::vector<unsigned>&, Rules::MultiGraph const&);
+		/*Solution create_exact(GameState const&, Optimizer const&);
+		Solution branchnbound(GameState const&, Solution, contiguous<unsigned> const&, unsigned, unsigned, unsigned, unsigned, unsigned);
+		void getprerequisites(unsigned, contiguous<unsigned>&, Rules::MultiGraph const&);*/
 
 		void make_valid(Solution&, Optimizer const&, GameState const&);
 		void trim(Solution&, Optimizer const&, GameState const&);

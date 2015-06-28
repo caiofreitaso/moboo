@@ -1,12 +1,12 @@
 #include "../include/rules.h"
 
-std::vector<BuildOrder::Rules::Task> BuildOrder::Rules::tasks;
-std::vector<BuildOrder::Rules::Event> BuildOrder::Rules::events;
-std::vector<BuildOrder::Rules::Resource> BuildOrder::Rules::resources;
+contiguous<BuildOrder::Rules::Task> BuildOrder::Rules::tasks;
+contiguous<BuildOrder::Rules::Event> BuildOrder::Rules::events;
+contiguous<BuildOrder::Rules::Resource> BuildOrder::Rules::resources;
 
-std::vector<MatrixRow<unsigned> > BuildOrder::Rules::taskProduceByEvent;
-std::vector<MatrixRow<unsigned> > BuildOrder::Rules::taskValuePerEvent;
-std::vector<MatrixRow<unsigned> > BuildOrder::Rules::resourceValueLost;
+contiguous<MatrixRow<unsigned> > BuildOrder::Rules::taskProduceByEvent;
+contiguous<MatrixRow<unsigned> > BuildOrder::Rules::taskValuePerEvent;
+contiguous<MatrixRow<unsigned> > BuildOrder::Rules::resourceValueLost;
 
 unsigned BuildOrder::Rules::mean_time = 0;
 

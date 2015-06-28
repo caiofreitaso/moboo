@@ -20,8 +20,8 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 	
 
 	//TRANSLATE INTO VECTORS
-	std::vector<std::vector<unsigned> > P(_data.size());
-	std::vector<bool> obj;
+	contiguous<contiguous<unsigned> > P(_data.size());
+	contiguous<bool> obj;
 
 	obj.push_back(true);
 	for (unsigned i = 0; i < _optimizer->objectives[0].row.size(); i++)
@@ -82,8 +82,8 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 				_uev[i] = 0;
 
 			//GET MINIMUM AND MAXIMUM
-			std::vector<unsigned> min(obj.size()), max(obj.size());
-			std::vector<unsigned> range(obj.size());
+			contiguous<unsigned> min(obj.size()), max(obj.size());
+			contiguous<unsigned> range(obj.size());
 
 			for (unsigned i = 0; i < obj.size(); i++)
 				min[i] = P[0][i];
@@ -138,8 +138,8 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 
 		//IS IT IN A CROWDED REGION
 		bool crowded = false;
-		std::vector<unsigned> crowded_regions;
-		std::vector<unsigned> crowded_size;
+		contiguous<unsigned> crowded_regions;
+		contiguous<unsigned> crowded_size;
 		unsigned maximum_crowd = 0;
 		if (!extend)
 		{
@@ -231,7 +231,7 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 			}
 
 			//SET CANDIDATES
-			std::vector<unsigned> candidates;
+			contiguous<unsigned> candidates;
 			for (unsigned i = 0; i < crowded_regions.size(); i++)
 				if (crowded_size[i] == maximum_crowd)
 					for (unsigned j = 0; j < P.size()-1; j++)
@@ -259,8 +259,8 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 		_uev[i] = 0;
 
 	//GET MINIMUM AND MAXIMUM
-	std::vector<unsigned> min(obj.size()), max(obj.size());
-	std::vector<unsigned> range(obj.size());
+	contiguous<unsigned> min(obj.size()), max(obj.size());
+	contiguous<unsigned> range(obj.size());
 
 	for (unsigned i = 0; i < obj.size(); i++)
 		min[i] = P[0][i];

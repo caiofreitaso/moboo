@@ -1,7 +1,7 @@
 #include "../include/nsga2-archiver.h"
 
-bool BuildOrder::Optimizer::NSGA2_Archiver::dominates(std::vector<unsigned> a,
-	std::vector<unsigned> b, std::vector<bool> min)
+bool BuildOrder::Optimizer::NSGA2_Archiver::dominates(contiguous<unsigned> a,
+	contiguous<unsigned> b, contiguous<bool> min)
 {
 	bool strictly = false;
 	for (unsigned i = 0; i < a.size(); i++)
@@ -23,9 +23,9 @@ bool BuildOrder::Optimizer::NSGA2_Archiver::dominates(std::vector<unsigned> a,
 	return strictly;
 }
 
-void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& indexes,
+void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(contiguous<unsigned>& indexes,
 	unsigned begin, unsigned end, unsigned objective,
-	std::vector<std::vector<unsigned> >& v)
+	contiguous<contiguous<unsigned> >& v)
 {
 	if (end > indexes.size())
 		return;
@@ -51,8 +51,8 @@ void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& ind
 		quicksort(indexes,storeIndex + 1,end,objective,v);
 	}
 }
-void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(std::vector<unsigned>& v,
-			   unsigned begin, unsigned end, std::vector<double>& dist)
+void BuildOrder::Optimizer::NSGA2_Archiver::quicksort(contiguous<unsigned>& v,
+			   unsigned begin, unsigned end, contiguous<double>& dist)
 {
 	if (end > v.size())
 		return;
@@ -93,8 +93,8 @@ BuildOrder::Optimizer::NSGA2_Archiver::NSGA2_Archiver(unsigned c, const Optimize
 void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 {
 	//TRANSLATE INTO VECTORS
-	std::vector<std::vector<unsigned> > P(pop.size());
-	std::vector<bool> min;
+	contiguous<contiguous<unsigned> > P(pop.size());
+	contiguous<bool> min;
 
 	min.push_back(true);
 	for (unsigned i = 0; i < _optimizer->objectives[0].row.size(); i++)
@@ -133,10 +133,10 @@ void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 	}
 
 	//FAST-NON-DOMINATED-SORT
-	std::vector<std::vector<unsigned> > S(P.size());
-	std::vector<unsigned> n(P.size());
+	contiguous<contiguous<unsigned> > S(P.size());
+	contiguous<unsigned> n(P.size());
 
-	std::vector<std::vector<unsigned> > F(1);
+	contiguous<contiguous<unsigned> > F(1);
 
 	for (unsigned p = 0; p < P.size(); p++)
 	{
@@ -154,7 +154,7 @@ void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 
 	for (unsigned i = 0; F[i].size(); i++)
 	{
-		F.push_back(std::vector<unsigned>());
+		F.push_back(contiguous<unsigned>());
 
 		for (unsigned p = 0; p < F[i].size(); p++)
 			for (unsigned q = 0; q < S[F[i][p]].size(); q++)
@@ -172,7 +172,7 @@ void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 	/*for (unsigned I = 0; I < F.size(); I++)
 		if (F[I].size() > 2)
 		{
-			std::vector<double> distance(F[I].size(), 0);
+			contiguous<double> distance(F[I].size(), 0);
 
 			for (unsigned m = 0; m < min.size(); m++)
 			{
@@ -202,14 +202,14 @@ void BuildOrder::Optimizer::NSGA2_Archiver::filter(Population& pop) const
 }
 
 void BuildOrder::Optimizer::NSGA2_Archiver::crowding (
-	std::vector<std::vector<unsigned> >& F,
-	std::vector<std::vector<unsigned> >& P,
-	std::vector<bool> const& min)
+	contiguous<contiguous<unsigned> >& F,
+	contiguous<contiguous<unsigned> >& P,
+	contiguous<bool> const& min)
 {
 	for (unsigned I = 0; I < F.size(); I++)
 		if (F[I].size() > 2)
 		{
-			std::vector<double> distance(F[I].size(), 0);
+			contiguous<double> distance(F[I].size(), 0);
 
 			for (unsigned m = 0; m < min.size(); m++)
 			{

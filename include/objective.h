@@ -18,16 +18,19 @@ namespace BuildOrder
 			unsigned pointer;
 			unsigned time_remaining;
 
+			time_helper()
+			: pointer(0), time_remaining(0)
+			{ }
 			time_helper(unsigned p, unsigned t)
 			: pointer(p), time_remaining(t)
 			{ }
 		};
 
-		typedef std::vector<time_helper> remaining_list;
+		typedef contiguous<time_helper> remaining_list;
 
-		void afterStack(std::vector<unsigned>&, std::vector<unsigned>&, GameState const&);
-		bool prerequisiteInStack(std::vector<bool>&, std::vector<unsigned>&, unsigned);
-		void resourcesByEvents(std::vector<bool>&, GameState const&);
+		void afterStack(contiguous<unsigned>&, contiguous<unsigned>&, GameState const&);
+		bool prerequisiteInStack(contiguous<bool>&, contiguous<unsigned>&, unsigned);
+		void resourcesByEvents(contiguous<bool>&, GameState const&);
 		bool possible(BuildOrder&, GameState const&);
 		bool possible(unsigned, GameState const&);
 

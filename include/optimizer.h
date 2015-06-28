@@ -49,9 +49,9 @@ namespace BuildOrder
 
 		class Optimizer
 		{
-			std::vector<double> _objV;
-			std::vector<MatrixRow<double> > _incV;
-			std::vector<MatrixRow<double> > _decV;
+			contiguous<double> _objV;
+			contiguous<MatrixRow<double> > _incV;
+			contiguous<MatrixRow<double> > _decV;
 
 		public:
 			bool time_as_objective;
@@ -195,7 +195,7 @@ namespace BuildOrder
 			}
 
 			void update();
-			std::vector<double> initialMap(double,double,GameState) const;
+			contiguous<double> initialMap(double,double,GameState) const;
 		};
 
 		void initOptimizer(Optimizer&, char const*);

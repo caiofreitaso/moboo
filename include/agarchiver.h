@@ -10,10 +10,10 @@ namespace BuildOrder
 		class AdaptativeGrid_Archiver : public Archiver
 		{
 			unsigned _gridLevels;
-			std::vector<unsigned> _ub;
-			std::vector<unsigned> _lb;
-			std::vector<unsigned> _uev;
-			std::vector<unsigned> _region;
+			contiguous<unsigned> _ub;
+			contiguous<unsigned> _lb;
+			contiguous<unsigned> _uev;
+			contiguous<unsigned> _region;
 
 		public:
 			AdaptativeGrid_Archiver(unsigned c, const Optimizer* o, unsigned g = 5)

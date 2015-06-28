@@ -23,9 +23,9 @@ double BuildOrder::Optimizer::Fix::delta_r_maximum = 2.0;
 
 void BuildOrder::Optimizer::passWeight(double value, unsigned task,
 	Rules::MultiGraph const& g,
-	std::vector<double>& final,
-	std::vector<bool> const& p,
-	std::vector< std::bitset<5> >& done)
+	contiguous<double>& final,
+	contiguous<bool> const& p,
+	contiguous< std::bitset<5> >& done)
 {
 	unsigned ti = g.find(task);
 	if (ti == g.size())
@@ -90,14 +90,14 @@ void BuildOrder::Optimizer::pruneGraph(Rules::MultiGraph& g,
 	GameState initial, Rules::relation_type r,
 	bool (*func)(unsigned, unsigned, unsigned))
 {
-	std::vector<unsigned> delete_stack;
+	contiguous<unsigned> delete_stack;
 
 	for (unsigned i = 0; i < g.size(); i++)
 	{
 		Rules::MultiGraph::node& v = g[i].value;
 		unsigned vi = g[i].index;
 		
-		std::vector<Rules::MultiGraph::e_it> stack;
+		contiguous<Rules::MultiGraph::e_it> stack;
 		for (auto e = v.edges.begin(); e != v.edges.end(); e++)
 		{
 			Rules::Dependency& d = e->value();
@@ -137,7 +137,7 @@ void BuildOrder::Optimizer::pruneGraph(Rules::MultiGraph& g,
 }
 
 void BuildOrder::Optimizer::getValues(Rules::MultiGraph& g,
-	GameState initial, std::vector<double> value)
+	GameState initial, contiguous<double> value)
 {
 	for (unsigned i = 0; i < g.size(); i++)
 	{
@@ -177,19 +177,19 @@ void BuildOrder::Optimizer::getValues(Rules::MultiGraph& g,
 	}
 }
 
-std::vector<double> BuildOrder::Optimizer::taskWeights(GameState initial,
+contiguous<double> BuildOrder::Optimizer::taskWeights(GameState initial,
 	Optimizer const& solver,
 	double o, double r, double p, double c, double m)
 {
-	std::vector<double> init_value = solver.initialMap(o, r, initial);
-	std::vector<double> taskValue(init_value);
+	contiguous<double> init_value = solver.initialMap(o, r, initial);
+	contiguous<double> taskValue(init_value);
 
 	Rules::MultiGraph actual(Rules::graph);
-	std::vector<double> weights(5);
+	contiguous<double> weights(5);
 
-	std::vector<bool> possibles(Rules::tasks.size(), false);
-	std::vector<bool> ddone(Rules::tasks.size(), false);
-	std::vector<std::bitset<5> > done(Rules::tasks.size());
+	contiguous<bool> possibles(Rules::tasks.size(), false);
+	contiguous<bool> ddone(Rules::tasks.size(), false);
+	contiguous<std::bitset<5> > done(Rules::tasks.size());
 
 	weights[0] = c;
 	weights[1] = c;
@@ -267,7 +267,7 @@ bool BuildOrder::Optimizer::nextTask(Solution& s, GameState init, Optimizer cons
 	double objective_multiplier, double restriction_multiplier, double prerequisite_multiplier,
 	double cost_multiplier, double maximum_multiplier)
 {
-	std::vector<double> taskValue;
+	contiguous<double> taskValue;
 
 	taskValue = taskWeights(s.final_state, solver,
 						 objective_multiplier,
@@ -393,13 +393,13 @@ void BuildOrder::Optimizer::trim(Solution& s, Optimizer const& solver, GameState
 	}
 }
 
-BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create_exact(GameState const& initial,
+/*BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create_exact(GameState const& initial,
 	Optimizer const& solver)
 {
 	Solution ret;
 	ret.final_state = initial;
 
-	std::vector<unsigned> target_tasks;
+	contiguous<unsigned> target_tasks;
 
 	//for each restricton: use branch-and-bound to reach the goal
 	for (auto r : solver.restrictions[0].row)
@@ -408,7 +408,7 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create_exact(GameState co
 		unsigned gt = r.value.greater_than;
 		unsigned lt = r.value.less_than;
 
-		std::vector<unsigned> candidates;
+		contiguous<unsigned> candidates;
 		for (unsigned i = 0; i < Rules::tasks.size(); i++)
 			if (Rules::tasks[i].produce.get(target))
 				candidates.push_back(i);
@@ -422,7 +422,7 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::create_exact(GameState co
 }
 
 BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState const& initial, Solution s,
-	std::vector<unsigned> const& target_tasks, unsigned target, unsigned gt, unsigned lt, unsigned last,
+	contiguous<unsigned> const& target_tasks, unsigned target, unsigned gt, unsigned lt, unsigned last,
 	unsigned maximum_time)
 {
 	static Solution ret;
@@ -430,7 +430,7 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState co
 	if (last == -1)
 		MTIME = maximum_time;
 
-	std::vector<double> taskValue(Rules::tasks.size(), 0);
+	contiguous<double> taskValue(Rules::tasks.size(), 0);
 
 	for(auto t : target_tasks)
 		taskValue[t] = 100;
@@ -444,14 +444,14 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState co
 		pruneGraph(actual, s.final_state, Rules::RT_BORROW, Rules::fillsBorrow);
 
 		{
-			std::vector<double> weights(5,0.5);
+			contiguous<double> weights(5,0.5);
 			weights[3] = weights[4] = 8000;
 			getValues(actual, s.final_state, weights);
 		}
 
 		{
-			std::vector<bool> possibles(Rules::tasks.size(), false);
-			std::vector<std::bitset<5> > done(Rules::tasks.size());
+			contiguous<bool> possibles(Rules::tasks.size(), false);
+			contiguous<std::bitset<5> > done(Rules::tasks.size());
 
 			for (unsigned t = 0; t < Rules::tasks.size(); t++)
 				possibles[t] = ::BuildOrder::Objective::possible(t,s.final_state);
@@ -474,7 +474,7 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState co
 	{
 		struct tmp
 		{ double a; unsigned i; bool operator<(tmp s) const { return a > s.a; } };
-		std::vector<tmp> list;
+		contiguous<tmp> list;
 		list.reserve(taskValue.size());
 
 		for (unsigned i = 0; i < taskValue.size(); i++)
@@ -515,7 +515,7 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState co
 		branchnbound(initial,nodes[i],target_tasks,target,gt,lt,nodes[i].orders.back().task,MTIME);
 
 	return ret;
-}
+}*/
 
 BuildOrder::Optimizer::Population BuildOrder::Optimizer::local_search(Population (*neighborhood)(Solution const&), Population const& p, unsigned childs, Optimizer const& opt, GameState init)
 {

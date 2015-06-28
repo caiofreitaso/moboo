@@ -65,7 +65,7 @@ bool BuildOrder::can(unsigned task, GameState const& s)
 	if (!hasPrerequisites(task,s))
 		return false;
 
-	std::vector<int> use(Rules::resources.size(),0);
+	contiguous<int> use(Rules::resources.size(),0);
 
 	//Can we consume the right amount of resources?
 	for (unsigned i = 0; i < Rules::tasks[task].consume.row.size(); i++)
@@ -110,7 +110,7 @@ bool BuildOrder::can(TaskPointer t, GameState const& s)
 	return can(t.task,s);
 }
 
-void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState const& init)
+void BuildOrder::Objective::resourcesByEvents(contiguous<bool>& r, GameState const& init)
 {
 	for (auto event : Rules::events)
 	{
@@ -140,8 +140,8 @@ void BuildOrder::Objective::resourcesByEvents(std::vector<bool>& r, GameState co
 	}
 }
 
-void BuildOrder::Objective::afterStack(std::vector<unsigned>& final,
-	std::vector<unsigned>& finalQ, GameState const& init)
+void BuildOrder::Objective::afterStack(contiguous<unsigned>& final,
+	contiguous<unsigned>& finalQ, GameState const& init)
 {
 	for (unsigned i = 0; i < final.size(); i++)
 		final[i] = init.resources[i].usableB();
@@ -172,10 +172,10 @@ void BuildOrder::Objective::afterStack(std::vector<unsigned>& final,
 	}
 }
 
-bool BuildOrder::Objective::prerequisiteInStack(std::vector<bool>& r,
-	std::vector<unsigned>& final, unsigned t)
+bool BuildOrder::Objective::prerequisiteInStack(contiguous<bool>& r,
+	contiguous<unsigned>& final, unsigned t)
 {
-	std::vector<int> values(r.size(), 0);
+	contiguous<int> values(r.size(), 0);
 
 	for (unsigned i = 0; i < Rules::tasks[t].prerequisite.row.size(); i++)
 	{
@@ -224,9 +224,9 @@ bool BuildOrder::Objective::possible(BuildOrder& build, GameState const& init)
 
 bool BuildOrder::Objective::possible(unsigned task, GameState const& init)
 {
-	std::vector<bool> should_I_Care(Rules::resources.size(),true);
-	std::vector<unsigned> final(Rules::resources.size(), 0);
-	std::vector<unsigned> finalQ(Rules::resources.size(), 0);
+	contiguous<bool> should_I_Care(Rules::resources.size(),true);
+	contiguous<unsigned> final(Rules::resources.size(), 0);
+	contiguous<unsigned> finalQ(Rules::resources.size(), 0);
 
 	afterStack(final, finalQ, init);
 	resourcesByEvents(should_I_Care, init);

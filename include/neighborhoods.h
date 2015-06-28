@@ -67,7 +67,7 @@ namespace BuildOrder
 			{ return final_state.time < s.final_state.time; }
 		};
 
-		typedef std::vector<Solution> Population;
+		typedef contiguous<Solution> Population;
 
 		Population delete_one(Solution const& s);
 		Population delete_tail(Solution const& s);

@@ -2,9 +2,9 @@
 
 BuildOrder::Rules::MultiGraph BuildOrder::Rules::graph;
 
-std::vector<BuildOrder::Rules::Dependency> BuildOrder::Rules::value(unsigned needs, unsigned needed)
+contiguous<BuildOrder::Rules::Dependency> BuildOrder::Rules::value(unsigned needs, unsigned needed)
 {
-	std::vector<Dependency> ret(5);
+	contiguous<Dependency> ret(5);
 	for (unsigned i = 0; i < 5; i++)
 		ret[i].type = (relation_type) i;
 
@@ -140,7 +140,7 @@ void BuildOrder::Rules::initGraph()
 		for (unsigned j = 0; j < tasks.size(); j++)
 			if (i != j)
 			{
-				std::vector<Dependency> d = value(i,j);
+				contiguous<Dependency> d (value(i,j));
 				for (unsigned k = 0; k < d.size(); k++)
 					graph.insert(i,j,0,d[k]);
 			}

@@ -3,7 +3,7 @@
 
 #include <set>
 #include <queue>
-#include <vector>
+#include "contiguous.h"
 #include <limits>
 #include "matrix.h"
 
@@ -68,7 +68,10 @@ namespace Graph
 		{ return !(*this == e); }
 
 		void insert(unsigned v, double value = 0, T p = T())
-		{ edges.set(v, Edge<T>(value, p)); }
+		{
+			Edge<T> e(value, p);
+			edges.set(v, e);
+		}
 
 		Edge<T> get(unsigned v) const
 		{ return edges.get(v); }
@@ -89,8 +92,8 @@ namespace Graph
 		public:
 			typedef typename Graph::Node<C,T> node;
 			typedef typename Graph::Edge<T> edge;
-			typedef typename std::vector<MatrixElement<Graph::Node<C,T> > >::iterator n_it;
-			typedef typename std::vector<MatrixElement<Graph::Edge<T> > >::iterator e_it;
+			typedef typename contiguous<MatrixElement<Graph::Node<C,T> > >::iterator n_it;
+			typedef typename contiguous<MatrixElement<Graph::Edge<T> > >::iterator e_it;
 		protected:
 			unsigned total;
 			MatrixRow<node> nodes;
@@ -190,7 +193,7 @@ namespace Graph
 	class DisjointSet
 	{
 		unsigned _size;
-		std::vector<std::set<unsigned>*> _data;
+		contiguous<std::set<unsigned>*> _data;
 
 		void remove_set(unsigned i)
 		{
@@ -247,15 +250,15 @@ namespace Graph
 	};
 
 	template<template<class> class C, class T>
-	std::pair<std::vector<unsigned>,double> dijkstra(MetaGraph<C,T> const& graph, unsigned from, unsigned to)
+	std::pair<contiguous<unsigned>,double> dijkstra(MetaGraph<C,T> const& graph, unsigned from, unsigned to)
 	{
-		std::pair<std::vector<unsigned>,double> ret;
+		std::pair<contiguous<unsigned>,double> ret;
 		ret.second = 0;
 
 		unsigned count = 1;
 		DisjointSet set(graph.vertices());
-		std::vector<double> weights(graph.vertices(), 1);
-		std::vector<unsigned> previous(graph.vertices(), -1);
+		contiguous<double> weights(graph.vertices(), 1);
+		contiguous<unsigned> previous(graph.vertices(), -1);
 		std::queue<unsigned> queue;
 
 		weights[from] = 0;

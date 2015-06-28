@@ -1,7 +1,7 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <vector>
+#include "contiguous.h"
 #include <iterator>
 #include <iostream>
 #include <algorithm>
@@ -31,10 +31,10 @@ template<class T>
 struct Row {
 	const T default_value = T();
 
-	typedef typename std::vector<MatrixElement<T> >::iterator iterator;
-	typedef typename std::vector<MatrixElement<T> >::const_iterator const_iterator;
+	typedef typename contiguous<MatrixElement<T> >::iterator iterator;
+	typedef typename contiguous<MatrixElement<T> >::const_iterator const_iterator;
 
-	std::vector<MatrixElement<T> > row;
+	contiguous<MatrixElement<T> > row;
 
 	Row& operator=(Row e)
 	{ std::swap(row,e.row); }
@@ -117,7 +117,7 @@ template<class T>
 struct SparseMatrix {
 	SparseMatrix() : _cols(0) {}
 	SparseMatrix(unsigned cols) : _cols(cols) { }
-	SparseMatrix(unsigned rows, unsigned cols) : _data(std::vector<MatrixRow<T> >(rows)), _cols(cols) { }
+	SparseMatrix(unsigned rows, unsigned cols) : _data(contiguous<MatrixRow<T> >(rows)), _cols(cols) { }
 	SparseMatrix(SparseMatrix const& m) : _data(m._data), _cols(m._cols) { }
 
 	MatrixRow<T> const& operator[](unsigned i) const { return _data[i]; }
@@ -176,13 +176,13 @@ struct SparseMatrix {
 	}
 
 	private:
-		std::vector<MatrixRow<T> > _data;
+		contiguous<MatrixRow<T> > _data;
 		unsigned _cols;
 };
 
-template<class T, class A = std::allocator<T> >
+template<class T>
 struct Matrix {
-	typedef std::vector<T,A> container;
+	typedef contiguous<T> container;
 	
 	Matrix() : _rows(0) { }
 	Matrix(unsigned rows, unsigned cols, T const& init = T()) : _rows(0) {
@@ -208,7 +208,7 @@ struct Matrix {
 	unsigned rows() const { return _rows; }
 	unsigned columns() const { return _rows ? _data.size() / _rows : 0; }
 
-	void addRow(std::vector<T,A> const& row = std::vector<T,A>(columns(),0)) {
+	void addRow(contiguous<T> const& row = contiguous<T>(columns(),0)) {
 		_data.insert(_data.end(), row.begin(), row.end());
 		_rows++;
 	}

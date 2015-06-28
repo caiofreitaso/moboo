@@ -24,7 +24,7 @@ namespace BuildOrder
 					AdaptativeGrid_Archiver population(population_size,this);
 					Population previous, actual;
 
-					std::vector<unsigned> valid(Rules::tasks.size(), 0);
+					contiguous<unsigned> valid(Rules::tasks.size(), 0);
 					std::chrono::time_point<std::chrono::system_clock> a = std::chrono::system_clock::now();
 
 					for (unsigned t = 0; t < valid.size(); t++)
@@ -107,7 +107,7 @@ namespace BuildOrder
 						for (unsigned s = 0; s < previous.size(); s++)
 							if (previous[s].orders.size())
 							{
-								std::vector<unsigned> n_valid(Rules::tasks.size(), 0);
+								contiguous<unsigned> n_valid(Rules::tasks.size(), 0);
 
 								for (unsigned t = 0; t < n_valid.size(); t++)
 									n_valid[t] = ::BuildOrder::Objective::possible(t, previous[s].final_state);

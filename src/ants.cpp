@@ -38,9 +38,9 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::Ants::optimize(GameStat
 			
 			while (!valid(s))
 			{
-				std::vector<double> heuristic = taskWeights(s.final_state, *this, obj_m,res_m);
-				std::vector<double> heuristic_power(heuristic.size());
-				std::vector<double> pheromones(heuristic.size());
+				contiguous<double> heuristic = taskWeights(s.final_state, *this, obj_m,res_m);
+				contiguous<double> heuristic_power(heuristic.size());
+				contiguous<double> pheromones(heuristic.size());
 				
 				if (res_m < max_r)
 					res_m *= delta_r;

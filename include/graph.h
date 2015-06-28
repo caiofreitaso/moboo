@@ -47,7 +47,7 @@ namespace BuildOrder
 		};
 		extern MultiGraph graph;
 
-		std::vector<Dependency> value(unsigned needed, unsigned needs);
+		contiguous<Dependency> value(unsigned needed, unsigned needs);
 
 		void initGraph();
 

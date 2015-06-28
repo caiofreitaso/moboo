@@ -1,6 +1,6 @@
 #include "../include/knee-archiver.h"
 
-std::vector<std::vector<double> > BuildOrder::Optimizer::Knee_Archiver::_values;
+contiguous<contiguous<double> > BuildOrder::Optimizer::Knee_Archiver::_values;
 unsigned BuildOrder::Optimizer::Knee_Archiver::_v_size = 0;
 unsigned BuildOrder::Optimizer::Knee_Archiver::_v_obj = 0;
 
@@ -11,9 +11,9 @@ BuildOrder::Optimizer::Knee_Archiver::Knee_Archiver(unsigned c, const Optimizer*
 }
 
 void BuildOrder::Optimizer::Knee_Archiver::knees (
-	std::vector<std::vector<unsigned> >& F,
-	std::vector<std::vector<unsigned> >& P,
-	std::vector<bool> const& min)
+	contiguous<contiguous<unsigned> >& F,
+	contiguous<contiguous<unsigned> >& P,
+	contiguous<bool> const& min)
 {
 	if (_v_size != P.size() || _v_obj != min.size())
 	{
@@ -30,7 +30,7 @@ void BuildOrder::Optimizer::Knee_Archiver::knees (
 		
 		double v;
 		_values.clear();
-		_values.push_back(std::vector<double>(_v_obj, 0));
+		_values.push_back(contiguous<double>(_v_obj, 0));
 		_values[0][0] = 1;
 
 		for (unsigned it = 0, pos = 0; it < _values.size(); it++)
@@ -45,7 +45,7 @@ void BuildOrder::Optimizer::Knee_Archiver::knees (
 
 			for (unsigned k = pos+1; k < _v_obj; k++)
 			{
-				std::vector<double> n_value(_values[it]);
+				contiguous<double> n_value(_values[it]);
 				n_value[pos] = v;
 				n_value[k] += delta;
 
@@ -75,7 +75,7 @@ void BuildOrder::Optimizer::Knee_Archiver::knees (
 	for (unsigned I = 0; I < F.size(); I++)
 		if (F[I].size() > 2)
 		{
-			std::vector<double> distance(F[I].size(), 0);
+			contiguous<double> distance(F[I].size(), 0);
 
 			for (unsigned i = 0; i < F[I].size(); i++)
 			{

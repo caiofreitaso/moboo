@@ -61,8 +61,8 @@ namespace BuildOrder
 		}
 	};
 
-	typedef std::vector<TaskPointer> BuildOrder;
-	typedef std::vector<EventPointer> EventList;
+	typedef contiguous<TaskPointer> BuildOrder;
+	typedef contiguous<EventPointer> EventList;
 
 	void print(BuildOrder const& b);
 
@@ -81,7 +81,7 @@ namespace BuildOrder
 	struct GameState {
 		unsigned time;
 
-		std::vector<Resource> resources;
+		contiguous<Resource> resources;
 		EventList tasks;
 
 		GameState() { }
@@ -128,7 +128,7 @@ namespace BuildOrder
 			return usable(index) - resources[index].borrowed;
 		}
 
-		static bool hasOMaximum(unsigned task, std::vector<unsigned> r)
+		static bool hasOMaximum(unsigned task, contiguous<unsigned> r)
 		{
 			for (unsigned i = 0; i < Rules::tasks[task].produce.row.size(); i++)
 			{
@@ -142,7 +142,7 @@ namespace BuildOrder
 			return true;
 		}
 
-		static bool hasMaximum(unsigned task, std::vector<unsigned> r)
+		static bool hasMaximum(unsigned task, contiguous<unsigned> r)
 		{
 			for (unsigned i = 0; i < Rules::tasks[task].produce.row.size(); i++)
 			{
@@ -155,7 +155,7 @@ namespace BuildOrder
 			return true;
 		}
 
-		static unsigned maximum(unsigned index, std::vector<unsigned> res)
+		static unsigned maximum(unsigned index, contiguous<unsigned> res)
 		{
 			if (Rules::resources[index].maximum_per_resource.row.size())
 			{

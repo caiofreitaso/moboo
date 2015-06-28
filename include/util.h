@@ -1,10 +1,10 @@
 #ifndef UTILH
 #define UTILH
 
-#include <vector>
+#include "contiguous.h"
 
 template<class T>
-void pop(std::vector<T>& v, unsigned i = 0)
+void pop(contiguous<T>& v, unsigned i = 0)
 {
 	v.erase(v.begin()+i);
 }

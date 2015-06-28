@@ -62,7 +62,7 @@ int main(int argc, char const *argv[])
 
 	BuildOrder::GameState state;
 	BuildOrder::Optimizer::Solution test;
-	std::vector<BuildOrder::Optimizer::Population> total;
+	contiguous<BuildOrder::Optimizer::Population> total;
 	BuildOrder::Optimizer::Population ret, front;
 
 	std::chrono::time_point<std::chrono::system_clock> a;

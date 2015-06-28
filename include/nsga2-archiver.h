@@ -10,28 +10,28 @@ namespace BuildOrder
 		class NSGA2_Archiver : public Archiver
 		{
 		protected:
-			static bool dominates(std::vector<unsigned> a, std::vector<unsigned> b,
-							std::vector<bool> min);
+			static bool dominates(contiguous<unsigned> a, contiguous<unsigned> b,
+							contiguous<bool> min);
 
-			static void quicksort(std::vector<unsigned>& indexes,
+			static void quicksort(contiguous<unsigned>& indexes,
 							unsigned begin, unsigned end, unsigned objective,
-							std::vector<std::vector<unsigned> >& v);
+							contiguous<contiguous<unsigned> >& v);
 
-			static void quicksort(std::vector<unsigned>& v,
-							unsigned begin, unsigned end, std::vector<double>& d);
+			static void quicksort(contiguous<unsigned>& v,
+							unsigned begin, unsigned end, contiguous<double>& d);
 
 		public:
-			void (*dist_func)	(std::vector<std::vector<unsigned> >&,
-								 std::vector<std::vector<unsigned> >&,
-								 std::vector<bool> const&);
+			void (*dist_func)	(contiguous<contiguous<unsigned> >&,
+								 contiguous<contiguous<unsigned> >&,
+								 contiguous<bool> const&);
 
 			NSGA2_Archiver(unsigned c, const Optimizer* o);
 
 			virtual void filter(Population& pop) const;
 
-			static void crowding	(std::vector<std::vector<unsigned> >&,
-									 std::vector<std::vector<unsigned> >&,
-									 std::vector<bool> const&);
+			static void crowding	(contiguous<contiguous<unsigned> >&,
+									 contiguous<contiguous<unsigned> >&,
+									 contiguous<bool> const&);
 		};
 	}
 }

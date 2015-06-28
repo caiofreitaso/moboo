@@ -1,7 +1,7 @@
 #ifndef RULESH
 #define RULESH
 
-#include <vector>
+#include "contiguous.h"
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -39,13 +39,13 @@ namespace BuildOrder
 			MatrixRow<unsigned> equivalence;
 		};
 
-		extern std::vector<Task> tasks;
-		extern std::vector<Event> events;
-		extern std::vector<Resource> resources;
+		extern contiguous<Task> tasks;
+		extern contiguous<Event> events;
+		extern contiguous<Resource> resources;
 
-		extern std::vector<MatrixRow<unsigned> > taskProduceByEvent;
-		extern std::vector<MatrixRow<unsigned> > taskValuePerEvent;
-		extern std::vector<MatrixRow<unsigned> > resourceValueLost;
+		extern contiguous<MatrixRow<unsigned> > taskProduceByEvent;
+		extern contiguous<MatrixRow<unsigned> > taskValuePerEvent;
+		extern contiguous<MatrixRow<unsigned> > resourceValueLost;
 
 		bool fillsPrerequisite(unsigned task, unsigned resource, unsigned amount);
 		bool fillsBorrow(unsigned task, unsigned resource, unsigned amount);

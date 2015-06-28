@@ -52,7 +52,7 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::one_swap(Solution const
 	if (s.orders.size() < 2)
 		return new_sol;
 
-	std::vector<unsigned> indexes;
+	contiguous<unsigned> indexes;
 	for (unsigned i = 0; i < s.orders.size(); i++)
 		indexes.push_back(i);
 
