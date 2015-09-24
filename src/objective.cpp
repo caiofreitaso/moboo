@@ -143,10 +143,19 @@ void BuildOrder::Objective::resourcesByEvents(contiguous<bool>& r, GameState con
 void BuildOrder::Objective::afterStack(contiguous<unsigned>& final,
 	contiguous<unsigned>& finalQ, GameState const& init)
 {
-	for (unsigned i = 0; i < final.size(); i++)
-		final[i] = init.resources[i].usableB();
-	for (unsigned i = 0; i < finalQ.size(); i++)
-		finalQ[i] = init.resources[i].quantity;
+	#pragma omp parallel
+	{
+		#pragma omp sections nowait
+		{
+			#pragma omp section
+			for (unsigned i = 0; i < final.size(); i++)
+				final[i] = init.resources[i].usableB();
+
+			#pragma omp section
+			for (unsigned i = 0; i < finalQ.size(); i++)
+				finalQ[i] = init.resources[i].quantity;
+		}
+	}
 
 	for (unsigned k = 0; k < init.tasks.size(); k++)
 	{

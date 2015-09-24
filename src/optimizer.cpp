@@ -559,3 +559,47 @@ void BuildOrder::Optimizer::initOptimizer(Optimizer& o, char const* f)
 			break;
 	} while (buffer[0] == 'U' || buffer[0] == 'u'|| buffer[0] == 'q');
 }
+
+contiguous<unsigned> BuildOrder::Optimizer::Optimizer::toVector(Solution a) const
+{
+	contiguous<unsigned> ret;
+
+	ret.reserve(numberObjectives());
+
+	ret.push_back(a.final_state.time);
+
+	for (unsigned i = 0; i < objectives[0].row.size(); i++)
+	{
+		unsigned index = objectives[0].row[i].index;
+
+		ret.push_back(a.final_state.resources[index].usable());
+	}
+
+	for (unsigned i = 0; i < objectives[1].row.size(); i++)
+	{
+		unsigned index = objectives[1].row[i].index;
+
+		ret.push_back(a.final_state.resources[index].quantity);
+	}
+
+	for (unsigned i = 0; i < objectives[2].row.size(); i++)
+	{
+		unsigned index = objectives[2].row[i].index;
+
+		ret.push_back(a.final_state.resources[index].used);
+	}
+
+	return ret;
+}
+
+contiguous< contiguous<unsigned> > BuildOrder::Optimizer::Optimizer::toVector(Population a) const
+{
+	contiguous<contiguous<unsigned> > ret;
+	
+	ret.reserve(a.size());
+
+	for (auto p : a)
+		ret.push_back(toVector(p));
+
+	return ret;
+}

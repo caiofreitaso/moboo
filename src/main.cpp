@@ -82,9 +82,9 @@ int main(int argc, char const *argv[])
 	#ifdef OPT_NSGA2
 	BuildOrder::Optimizer::NSGA2 solver(50,50);
 	#else
-	BuildOrder::Optimizer::Ants solver(8, 5, 1, 1, 1, 0.3);
+	//BuildOrder::Optimizer::Ants solver(8, 5, 1, 1, 1, 0.3);
 	//BuildOrder::Optimizer::NSGA2 solver(8,5);
-	//BuildOrder::Optimizer::MOGRASP solver(8, 5, 1, 1);
+	BuildOrder::Optimizer::MOGRASP solver(8, 5, 1, 1);
 	//BuildOrder::Optimizer::ExactOpt solver(1000);
 	#endif
 
@@ -124,7 +124,7 @@ int main(int argc, char const *argv[])
 	print(ret[0].orders);
 	std::cout << "Time: " << ret[0].final_state.time << "\n";
 
-	*/for (unsigned i = 0; i < 30; i++)
+	*/for (unsigned i = 0; i < 300; i++)
 	{
 		a = std::chrono::system_clock::now();
 		auto lastfront = solver.optimize(state, 5);

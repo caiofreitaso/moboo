@@ -267,15 +267,26 @@ bool BuildOrder::Optimizer::nextTask(Solution& s, GameState init, Optimizer cons
 	double objective_multiplier, double restriction_multiplier, double prerequisite_multiplier,
 	double cost_multiplier, double maximum_multiplier)
 {
-	contiguous<double> taskValue;
+	contiguous<double> taskValue;//(Rules::tasks.size());
 
+	/*double cc = 0;
+	for (unsigned i = 0; i < taskValue.size(); i++)
+		if (::BuildOrder::Objective::possible(i, init))
+		{
+			++taskValue[i];
+			++cc;
+		}
+	for (unsigned i = 0; i < taskValue.size(); i++)
+		taskValue[i] /= cc;
+
+	*/
 	taskValue = taskWeights(s.final_state, solver,
 						 objective_multiplier,
 						 restriction_multiplier,
 						 prerequisite_multiplier,
 						 cost_multiplier,
 						 maximum_multiplier);
-
+	
 	double dice = drng();
 
 	for (unsigned i = 0; i < taskValue.size(); i++)
@@ -534,9 +545,8 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::local_search(Population
 			for (unsigned t = 0; t < n.size(); t++)
 				#pragma omp critical
 				neighbors.push_back(n[t]);
-			#pragma omp critical
-			neighbors = opt.nonDominated(neighbors);
 		}
+		neighbors = opt.nonDominated(neighbors);
 	}
 
 	return neighbors;
@@ -562,5 +572,5 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::local_search(Population
 		}
 	}
 
-	return neighbors;
+	return opt.nonDominated(neighbors);
 }
