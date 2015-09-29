@@ -15,7 +15,7 @@ debug: CC_FLAGS += -ggdb
 debug: $(OBJ_FILES)
 	g++ $(LD_FLAGS) -o $@ $^
 
-main: LD_FLAGS += -O3
+main: LD_FLAGS += -Ofast
 main: CC_FLAGS += -ggdb
 main: $(OBJ_FILES)
 	g++ $(LD_FLAGS) -o $@ $^

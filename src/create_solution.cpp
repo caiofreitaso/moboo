@@ -197,6 +197,7 @@ contiguous<double> BuildOrder::Optimizer::taskWeights(GameState initial,
 	weights[3] = p;
 	weights[4] = p;
 
+	#pragma omp parallel for
 	for (unsigned t = 0; t < Rules::tasks.size(); t++)
 		possibles[t] = ::BuildOrder::Objective::possible(t,initial);
 
@@ -219,6 +220,7 @@ contiguous<double> BuildOrder::Optimizer::taskWeights(GameState initial,
 	double sum = DOUBLE_NINF;
 
 	//CLEAN UNFEASIBLE TASKS
+	#pragma omp parallel for
 	for (unsigned t = 0; t < Rules::tasks.size(); t++)
 		if (!possibles[t])
 			taskValue[t] = DOUBLE_NINF;

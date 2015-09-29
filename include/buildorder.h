@@ -84,9 +84,6 @@ namespace BuildOrder
 		contiguous<Resource> resources;
 		EventList tasks;
 
-		GameState() { }
-		~GameState() { }
-
 		void print() const
 		{
 			std::cout << "TIME: " << time << "\n";

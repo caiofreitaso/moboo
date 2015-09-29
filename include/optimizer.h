@@ -196,6 +196,8 @@ namespace BuildOrder
 
 			void update();
 			contiguous<double> initialMap(double,double,GameState) const;
+			contiguous<unsigned> toVector(Solution) const;
+			contiguous<contiguous<unsigned> > toVector(Population) const;
 		};
 
 		void initOptimizer(Optimizer&, char const*);
