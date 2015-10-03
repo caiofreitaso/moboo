@@ -1,0 +1,10 @@
+#objmultipliermin > objmultipliermax
+#resmultipliermin > resmultipliermax
+objincreasemin > objincreasemax
+resincreasemin > resincreasemax
+#Fobjmultipliermin > Fobjmultipliermax
+#Fresmultipliermin > Fresmultipliermax
+Fobjincreasemin > Fobjincreasemax
+Fresincreasemin > Fresincreasemax
+objincreasemax > resincreasemin
+Fobjincreasemax > Fresincreasemax

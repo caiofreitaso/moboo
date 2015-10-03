@@ -16,6 +16,7 @@ unsigned neighborhood = 2;
 unsigned iterations = 20;
 unsigned archSize = 20;
 double stop_chance = 0.3;
+unsigned runs = 1;
 
 double aco_alpha = 0.5;
 double aco_beta = 0.5;
@@ -25,6 +26,15 @@ unsigned creation_cycles = 5;
 unsigned children = 1;
 
 double mograsp_parents = 1;
+
+bool stdout_time = false;
+bool stdout_front = false;
+bool stderr_time = false;
+bool stderr_front = false;
+
+bool print_orders = false;
+bool stdout_filter = false;
+bool stderr_filter = false;
 
 int set_options(int argc, char const *argv[]);
 void print_help(char const* program_name);
@@ -41,7 +51,7 @@ int main(int argc, char const *argv[])
 	if (!set_options(argc,argv))
 		return 0;
 
-	for (unsigned i = 0; i < 300; i++)
+	for (unsigned i = 0; i < runs; i++)
 	{
 		a = std::chrono::system_clock::now();
 		auto lastfront = optm->optimize(state, 5);
@@ -49,12 +59,23 @@ int main(int argc, char const *argv[])
 
 		tt = std::chrono::system_clock::now() - a;
 		double duration = tt.count();
-		std::cout << "TIME = " << duration << "\n";
 
-		for (unsigned k = 0; k < lastfront.size(); k++)
-			std::cerr << optm->print(lastfront[k]) << "\n";
+		if (stdout_time)
+			std::cout << duration << "\n";
+		else if (stderr_time)
+			std::cerr << duration << "\n";
 
-		std::cerr << "\n";
+		if (stderr_front)
+		{
+			for (unsigned k = 0; k < lastfront.size(); k++)
+				std::cerr << optm->print(lastfront[k]) << "\n";
+			std::cerr << "\n";
+		} else if (stdout_front)
+		{
+			for (unsigned k = 0; k < lastfront.size(); k++)
+				std::cout << optm->print(lastfront[k]) << "\n";
+			std::cout << "\n";
+		}
 
 		ret.insert(ret.begin(), total.back().begin(),total.back().end());
 	}
@@ -63,15 +84,21 @@ int main(int argc, char const *argv[])
 
 	for (unsigned i = 0; i < front.size(); i++)
 	{
-		std::cout << "\n" << (i+1) << "\n";
-		std::cout << "BUILD ORDER: ";
-		print(front[i].orders);
+		if (print_orders)
+		{
+			std::cout << "\n" << (i+1) << "\n";
+			std::cout << "BUILD ORDER: ";
+			print(front[i].orders);
 
-		std::cout << "Time: " << front[i].final_state.time << "\n";
-		std::cout << "Minerals: " << front[i].final_state.resources[0].usable() << "\n";
-		std::cout << "Zerglings: " << front[i].final_state.resources[7].usable() << "\n";
+			std::cout << "Time: " << front[i].final_state.time << "\n";
+			std::cout << "Minerals: " << front[i].final_state.resources[0].usable() << "\n";
+			std::cout << "Zerglings: " << front[i].final_state.resources[7].usable() << "\n";
+		}
 
-		std::cerr << optm->print(front[i]) << "\n";
+		if (stdout_filter)
+			std::cout << optm->print(front[i]) << "\n";
+		else if (stderr_filter)
+			std::cerr << optm->print(front[i]) << "\n";
 		//std::cerr << front[i].final_state.time << " -" << front[i].final_state.resources[0].usable() << "\n";
 	}
 
@@ -87,13 +114,10 @@ int set_options(int argc, char const *argv[])
 		return 0;
 	}
 
-	bool set_opt = false;
-
 	for (int i = 4; i < argc; i = i+2)
 	{
 		if (!strcmp(argv[i],"-o"))
 		{
-			opt_type = 4;
 			if(!strcmp(argv[i+1],"nsga2"))
 				opt_type = 0;
 			else if(!strcmp(argv[i+1],"knee"))
@@ -102,11 +126,8 @@ int set_options(int argc, char const *argv[])
 				opt_type = 2;
 			else if(!strcmp(argv[i+1],"mograsp"))
 				opt_type = 3;
-
-			if (opt_type == 4)
-				goto optionsfail;
 			else
-				set_opt = true;
+				goto optionsfail;
 		} else if (!strcmp(argv[i],"-n")) {
 			if(!strcmp(argv[i+1],"delete_one"))
 				neighborhood = 0;
@@ -125,6 +146,10 @@ int set_options(int argc, char const *argv[])
 		} else if (!strcmp(argv[i],"-s")) {
 			archSize = strtol(argv[i+1],0,10);
 			if (archSize <= 0)
+				goto optionsfail;
+		} else if (!strcmp(argv[i],"-r")) {
+			runs = strtol(argv[i+1],0,10);
+			if (runs <= 0)
 				goto optionsfail;
 		} else if (!strcmp(argv[i],"-c")) {
 			stop_chance = strtof(argv[i+1],0);
@@ -168,67 +193,108 @@ int set_options(int argc, char const *argv[])
 				goto optionsfail;
 		} else if (!strcmp(argv[i],"-objm")) {
 			BuildOrder::Optimizer::Creation::objective_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Creation::objective_minimum < 0)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::objective_maximum < BuildOrder::Optimizer::Creation::objective_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
 		} else if (!strcmp(argv[i],"-objM")) {
 			BuildOrder::Optimizer::Creation::objective_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::objective_maximum < BuildOrder::Optimizer::Creation::objective_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
 		} else if (!strcmp(argv[i],"-resm")) {
 			BuildOrder::Optimizer::Creation::restriction_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Creation::restriction_minimum < 0)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::restriction_maximum < BuildOrder::Optimizer::Creation::restriction_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::restriction_maximum,BuildOrder::Optimizer::Creation::restriction_minimum);
 		} else if (!strcmp(argv[i],"-resM")) {
 			BuildOrder::Optimizer::Creation::restriction_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::restriction_maximum < BuildOrder::Optimizer::Creation::restriction_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::restriction_maximum,BuildOrder::Optimizer::Creation::restriction_minimum);
 		} else if (!strcmp(argv[i],"-dOm")) {
 			BuildOrder::Optimizer::Creation::delta_o_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Creation::delta_o_minimum < 1)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::delta_o_maximum < BuildOrder::Optimizer::Creation::delta_o_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::delta_o_maximum,BuildOrder::Optimizer::Creation::delta_o_minimum);
 		} else if (!strcmp(argv[i],"-dOM")) {
 			BuildOrder::Optimizer::Creation::delta_o_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::delta_o_maximum <= BuildOrder::Optimizer::Creation::delta_o_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::delta_o_maximum,BuildOrder::Optimizer::Creation::delta_o_minimum);
 		} else if (!strcmp(argv[i],"-dRm")) {
 			BuildOrder::Optimizer::Creation::delta_r_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Creation::delta_r_minimum < 1)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::delta_r_maximum < BuildOrder::Optimizer::Creation::delta_r_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
 		} else if (!strcmp(argv[i],"-dRM")) {
 			BuildOrder::Optimizer::Creation::delta_r_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::delta_r_maximum <= BuildOrder::Optimizer::Creation::delta_r_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
 		} else if (!strcmp(argv[i],"-Fobjm")) {
 			BuildOrder::Optimizer::Fix::objective_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Fix::objective_minimum < 0)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::objective_maximum < BuildOrder::Optimizer::Creation::objective_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
 		} else if (!strcmp(argv[i],"-FobjM")) {
 			BuildOrder::Optimizer::Fix::objective_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Fix::objective_maximum < BuildOrder::Optimizer::Fix::objective_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
 		} else if (!strcmp(argv[i],"-Fresm")) {
 			BuildOrder::Optimizer::Fix::restriction_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Fix::restriction_minimum < 0)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::restriction_maximum < BuildOrder::Optimizer::Creation::restriction_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::restriction_maximum,BuildOrder::Optimizer::Creation::restriction_minimum);
 		} else if (!strcmp(argv[i],"-FresM")) {
 			BuildOrder::Optimizer::Fix::restriction_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Fix::restriction_maximum < BuildOrder::Optimizer::Fix::restriction_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::restriction_maximum,BuildOrder::Optimizer::Creation::restriction_minimum);
 		} else if (!strcmp(argv[i],"-FdOm")) {
 			BuildOrder::Optimizer::Fix::delta_o_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Fix::delta_o_minimum < 1)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::delta_o_maximum < BuildOrder::Optimizer::Creation::delta_o_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::delta_o_maximum,BuildOrder::Optimizer::Creation::delta_o_minimum);
 		} else if (!strcmp(argv[i],"-FdOM")) {
 			BuildOrder::Optimizer::Fix::delta_o_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Fix::delta_o_maximum <= BuildOrder::Optimizer::Fix::delta_o_minimum)
-				goto optionsfail;
+				std::swap(BuildOrder::Optimizer::Creation::delta_o_maximum,BuildOrder::Optimizer::Creation::delta_o_minimum);
 		} else if (!strcmp(argv[i],"-FdRm")) {
 			BuildOrder::Optimizer::Fix::delta_r_minimum = strtof(argv[i+1],0);
-			if (BuildOrder::Optimizer::Fix::delta_r_minimum < 1)
-				goto optionsfail;
+			if (BuildOrder::Optimizer::Creation::delta_r_maximum < BuildOrder::Optimizer::Creation::delta_r_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
 		} else if (!strcmp(argv[i],"-FdRM")) {
 			BuildOrder::Optimizer::Fix::delta_r_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Fix::delta_r_maximum <= BuildOrder::Optimizer::Fix::delta_r_minimum)
+				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
+		} else if (!strcmp(argv[i],"-std")) {
+			if(!strcmp(argv[i+1],"time"))
+			{
+				stdout_time = true;
+				stdout_front = false;
+			}
+			else if(!strcmp(argv[i+1],"fronts"))
+			{
+				stdout_front = true;
+				stdout_time = false;
+			}
+			else
+				goto optionsfail;
+		} else if (!strcmp(argv[i],"-err")) {
+			if(!strcmp(argv[i+1],"time"))
+			{
+				stderr_time = true;
+				stderr_front = false;
+			}
+			else if(!strcmp(argv[i+1],"fronts"))
+			{
+				stderr_front = true;
+				stderr_time = false;
+			}
+			else
+				goto optionsfail;
+		} else if (!strcmp(argv[i],"-P"))
+			print_orders = true;
+		else if (!strcmp(argv[i],"-f")) {
+			if(!strcmp(argv[i+1],"std"))
+			{
+				stdout_filter = true;
+				stderr_filter = false;
+			}
+			else if(!strcmp(argv[i+1],"err"))
+			{
+				stdout_filter = false;
+				stderr_filter = true;
+			}
+			else
 				goto optionsfail;
 		}
 	}
@@ -253,9 +319,21 @@ void print_help(char const* program_name)
 			  << "  \t\t\t[1, +INF]\tdefault = 20\n"
 			  << "  -s <value>\t\tArchiver size\n"
 			  << "  \t\t\t[1, +INF]\tdefault = 20\n"
+			  << "  -r <value>\t\tNumber of runs\n"
+			  << "  \t\t\t[1, +INF]\tdefault = 1\n"
 			  << "  -c <value>\t\tStop chance\n"
 			  << "  \t\t\t(0, 1]\tdefault = 0.3\n\n"
-			  
+		  
+		  << "OUTPUT Options:\n"
+			  << "  -std <value>\tChoose which value goes to stdout:\n"
+			  << "  \t\t\ttime, fronts\n"
+			  << "  -err <value>\tChoose which value goes to stderr:\n"
+			  << "  \t\t\ttime, fronts\n"
+			  << "  -P\t\tPrint the orders from the non-dominated front.\n"
+			  << "  -f <output>\tChoose to which output the filtered front goes:\n"
+			  << "  \t\t\tstd, err\n"
+
+		  
 		  << "ANT COLONY OPTIMIZER Options\n"
 			  << "  -an <value>\t\tNumber of ants\n"
 			  << "  \t\t\t[1, +INF]\tdefault = 5\n"
@@ -344,15 +422,15 @@ void init(char const *argv[])
 	
 	BuildOrder::createState(state);
 	BuildOrder::initState(state, argv[2]);
-	std::cout << "INITIAL STATE:\n";
-	state.print();
-	std::cout << "--------------\n\n";
+	//std::cout << "INITIAL STATE:\n";
+	//state.print();
+	//std::cout << "--------------\n\n";
 	/////////////////////////////////////////////////////
 
 	BuildOrder::Optimizer::initOptimizer(*optm,argv[3]);
-	std::cout << optm->print();
+	//std::cout << optm->print();
 	optm->update();
 
 	tt = std::chrono::system_clock::now() - a;
-	std::cout << "\n--------------\nPREPROCESSING TIME = " << tt.count() << "\n--------------\n";
+	//std::cout << "\n--------------\nPREPROCESSING TIME = " << tt.count() << "\n--------------\n";
 }
