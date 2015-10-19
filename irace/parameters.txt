@@ -5,7 +5,7 @@ ants               "-an "      i         (1, 10)                       | algorit
 alpha              "-aa "      r         (0.00, 5.00)                  | algorithm %in% c("aco")
 beta               "-ab "      r         (0.00, 10.00)                 | algorithm %in% c("aco")
 evaporation        "-ae "      r         (0.01, 1.00)                  | algorithm %in% c("aco")
-antchildren        "-ac "      i         (1, 5)                        | algorithm %in% c("aco")
+antchildren        "-ac "      i         (1, 3)                        | algorithm %in% c("aco")
 nsga2creation      "-nc "      i         (1, 100)                      | algorithm %in% c("nsga2", "knee")
 mograspcreation    "-mc "      i         (1, 100)                      | algorithm %in% c("mograsp")
 mograspparents     "-mp "      r         (0.25, 1.00)                  | algorithm %in% c("mograsp")
