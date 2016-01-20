@@ -44,16 +44,16 @@ bool BuildOrder::Optimizer::Optimizer::dominates(Solution a, Solution b) const
 	for (unsigned i = 0; i < a_obj.size(); i++)
 		if (min[i])
 		{
-			if (a_obj[i] < b_obj[i])
+			if (a_obj[i] <= b_obj[i])
 				strictly = true;
-			else if (a_obj[i] > b_obj[i])
+			else// if (a_obj[i] > b_obj[i])
 				return false;
 		}
 		else
 		{
-			if (a_obj[i] > b_obj[i])
+			if (a_obj[i] >= b_obj[i])
 				strictly = true;
-			else if (a_obj[i] < b_obj[i])
+			else// if (a_obj[i] < b_obj[i])
 				return false;
 		}
 

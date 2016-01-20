@@ -102,6 +102,8 @@ namespace BuildOrder
 		void make_valid(Solution&, Optimizer const&, GameState const&);
 		void trim(Solution&, Optimizer const&, GameState const&);
 
+		extern unsigned local_search_maximum;
+
 		Population local_search(Population (*neighborhood)(Solution const&), Population const& p, unsigned childs, Optimizer const& opt, GameState init);
 		Population local_search(Population (*neighborhood)(Solution const&), Solution const& p, unsigned childs, Optimizer const& opt, GameState init);
 	}

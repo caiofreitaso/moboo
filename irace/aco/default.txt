@@ -1,0 +1,2 @@
+algorithm	localsearchruns		stopchance	objmultiplier	resmultiplier	objincrease	resincrease	Fobjmultiplier	Fresmultiplier	Fobjincrease	Fresincrease	ants	alpha	beta	evaporation	antchildren
+aco 		5					0.3			2.0				1.5				1.01		1.8			1.5				2.6				1.1				1.4				5		0.5		0.5		0.4			1			

@@ -2,6 +2,8 @@
 #define AGARCHIVERH
 
 #include "archivers.h"
+#include <iostream>
+#include <cstdlib>
 #include <cassert>
 
 namespace BuildOrder

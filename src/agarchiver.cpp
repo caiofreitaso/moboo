@@ -68,13 +68,14 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::fixBounds(contiguous<contig
 								break;
 
 						bool done = false;
-						for (unsigned k = 0; k < sz; k++)
-							if (_uev[k] > 1)
-								if (P[k][j] == (min ? _min[j] : _max[j]))
-								{
-									done = true;
-									break;
-								}
+						if (j < obj.size())
+							for (unsigned k = 0; k < sz; k++)
+								//if (_uev[k] > 1 || k < i)
+									if (P[k][j] == (min ? _min[j] : _max[j]))
+									{
+										done = true;
+										break;
+									}
 
 						if (done)
 							_uev[i] = 0;
@@ -103,6 +104,10 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::fixBounds(contiguous<contig
 			}
 		}
 	}
+
+	//UPDATE REGIONS
+	for (unsigned i = 0; i < sz; i++)
+		_region[i] = getRegionIndex(P[i]);
 }
 
 unsigned BuildOrder::Optimizer::AdaptativeGrid_Archiver::getRegionIndex(contiguous<unsigned> S) const
@@ -143,22 +148,10 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 	
 	if (_data.size() <= _capacity)
 		update = true;
-	
 
 	//TRANSLATE INTO VECTORS
 	contiguous<contiguous<unsigned> > P;
-	
 	P = _optimizer->toVector(_data);
-
-	//CALCULATE NUMBER OF HYPERCUBES
-	unsigned num_grids = 1, expo = obj.size(), base = _gridLevels;
-	while(expo)
-	{
-		if (expo & 1)
-			num_grids *= base;
-		expo >>= 1;
-		base *= base;
-	}
 
 	bool extend = false;
 	bool isuev = false;
@@ -202,28 +195,70 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 
 		//SEPARATE OCCUPIED REGIONS
 		for (unsigned i = 0; i < _region.size(); i++)
-		{
-			bool done = false;
-			for (unsigned j = 0; j < crowded_regions.size(); j++)
-				if (_region[i] == crowded_regions[j])
-				{
-					if (_uev[i] == 0)
-						crowded_size[j]++;
-					done = true;
-					break;
-				}
-
-			if (!done)
+			if (_uev[i] == 0)
 			{
-				crowded_regions.push_back(_region[i]);
-				crowded_size.push_back(1);
+				bool found = false;
+				for (unsigned j = 0; j < crowded_regions.size(); j++)
+					if (_region[i] == crowded_regions[j])
+					{
+						crowded_size[j]++;
+						found = true;
+						break;
+					}
+
+				if (!found)
+				{
+					crowded_regions.push_back(_region[i]);
+					crowded_size.push_back(1);
+				}
 			}
+
+		if (crowded_regions.size() == 0)
+		{
+			unsigned count = 0;
+			
+			for (unsigned i = 0; i < _uev.size(); i++)
+				std::cerr << _uev[i] << " ";
+			std::cerr << "\n";
+
+			for (unsigned i = 0; i < _max.size(); i++)
+				std::cerr << _max[i] << " ";
+			std::cerr << "\n";
+
+			for (unsigned i = 0; i < _min.size(); i++)
+				std::cerr << _min[i] << " ";
+			std::cerr << "\n";
+
+			for (unsigned i = 0; i < P.size(); i++)
+			{
+				std::cerr << "(";
+				unsigned j;
+				for (j = 0; j < obj.size()-1; j++)
+					std::cerr << P[i][j] << ",";
+				std::cerr << P[i][j] << ") ";
+			}
+			std::cerr << "\n";
+
+			exit(1);
 		}
 
 		//GET CROWDED REGIONS
 		for (unsigned i = 0; i < crowded_size.size(); i++)
 			if (crowded_size[i] > maximum_crowd)
 				maximum_crowd = crowded_size[i];
+
+		assert(maximum_crowd > 0);
+
+		//SET CANDIDATES
+		contiguous<unsigned> candidates;
+		for (unsigned i = 0; i < crowded_regions.size(); i++)
+			if (crowded_size[i] == maximum_crowd)
+				for (unsigned j = 0; j < _region.size(); j++)
+					if (_region[j] == crowded_regions[i])
+						if (_uev[j] == 0)
+							candidates.push_back(j);
+
+		assert(candidates.size() > 0);
 
 		//IS IT IN A CROWDED REGION
 		if (!extend)
@@ -243,15 +278,6 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 
 		if (!crowded || extend || isuev)
 		{
-			//SET CANDIDATES
-			contiguous<unsigned> candidates;
-			for (unsigned i = 0; i < crowded_regions.size(); i++)
-				if (crowded_size[i] == maximum_crowd)
-					for (unsigned j = 0; j < _region.size(); j++)
-						if (_region[j] == crowded_regions[i])
-							if (_uev[j] == 0)
-								candidates.push_back(j);
-
 			//ELIMINATE THE UNFORTUNATE
 			if (candidates.size())
 			{
@@ -273,9 +299,5 @@ void BuildOrder::Optimizer::AdaptativeGrid_Archiver::insert(Solution a)
 	//UPDATE BOUNDS
 	if (P.size())
 		fixBounds(P, P.size());
-
-	//UPDATE REGIONS
-	for (unsigned i = 0; i < P.size(); i++)
-		_region[i] = getRegionIndex(P[i]);
 
 }

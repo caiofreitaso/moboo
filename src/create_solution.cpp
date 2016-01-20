@@ -20,6 +20,8 @@ double BuildOrder::Optimizer::Fix::delta_o_maximum = 1.3;
 double BuildOrder::Optimizer::Fix::delta_r_minimum = 1.4;
 double BuildOrder::Optimizer::Fix::delta_r_maximum = 2.0;
 
+unsigned BuildOrder::Optimizer::local_search_maximum = 5;
+
 
 void BuildOrder::Optimizer::passWeight(double value, unsigned task,
 	Rules::MultiGraph const& g,
@@ -533,8 +535,9 @@ BuildOrder::Optimizer::Solution BuildOrder::Optimizer::branchnbound(GameState co
 BuildOrder::Optimizer::Population BuildOrder::Optimizer::local_search(Population (*neighborhood)(Solution const&), Population const& p, unsigned childs, Optimizer const& opt, GameState init)
 {
 	Population neighbors(p), l(p);
+	unsigned iterations = 0;
 
-	for(; neighbors == l; )
+	for(; neighbors == l && iterations < local_search_maximum; iterations++)
 	{
 		l = neighbors;
 		neighbors.clear();

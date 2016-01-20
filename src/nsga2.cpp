@@ -4,7 +4,7 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::NSGA2::optimize(GameSta
 {
 	NSGA2_Archiver pop(population_size,this);
 
-	#pragma omp parallel for num_threads(20)
+	#pragma omp parallel for num_threads(16)
 	for (unsigned i = 0; i < creation_cycles; i++)
 	{
 		Solution n = create(initial, *this, stop_chance);
@@ -20,6 +20,8 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::NSGA2::optimize(GameSta
 
 		unsigned max = pop.size();///2;
 
+		Population children;
+
 		//RECREATE STRAIN
 		#pragma omp parallel for num_threads(16)
 		for (unsigned p = 0; p < max; p++)
@@ -33,9 +35,12 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::NSGA2::optimize(GameSta
 				trim(n[t], *this, initial);
 
 				#pragma omp critical
-				pop.insert(n[t]);
+				children.push_back(n[t]);
 			}
 		}
+
+		for (unsigned k = 0; k < children.size(); k++)
+			pop.insert(children[k]);
 
 		//std::cout << "\tnew " << pop.size() << "\n";
 	}

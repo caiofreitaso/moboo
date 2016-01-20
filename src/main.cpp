@@ -17,6 +17,7 @@ unsigned iterations = 20;
 unsigned archSize = 20;
 double stop_chance = 0.3;
 unsigned runs = 1;
+unsigned localsearch_runs = 5;
 
 double aco_alpha = 0.5;
 double aco_beta = 0.5;
@@ -151,6 +152,10 @@ int set_options(int argc, char const *argv[])
 			runs = strtol(argv[i+1],0,10);
 			if (runs <= 0)
 				goto optionsfail;
+		} else if (!strcmp(argv[i],"-ls")) {
+			localsearch_runs = strtol(argv[i+1],0,10);
+			if (localsearch_runs <= 0)
+				goto optionsfail;
 		} else if (!strcmp(argv[i],"-c")) {
 			stop_chance = strtof(argv[i+1],0);
 			if (stop_chance <= 0 || stop_chance > 1)
@@ -191,7 +196,9 @@ int set_options(int argc, char const *argv[])
 			mograsp_parents = strtof(argv[i+1],0);
 			if (mograsp_parents < 0 || mograsp_parents > 1 || opt_type < 3)
 				goto optionsfail;
-		} else if (!strcmp(argv[i],"-objm")) {
+		}
+
+		else if (!strcmp(argv[i],"-objm")) {
 			BuildOrder::Optimizer::Creation::objective_minimum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::objective_maximum < BuildOrder::Optimizer::Creation::objective_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
@@ -199,7 +206,8 @@ int set_options(int argc, char const *argv[])
 			BuildOrder::Optimizer::Creation::objective_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::objective_maximum < BuildOrder::Optimizer::Creation::objective_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
-		} else if (!strcmp(argv[i],"-resm")) {
+		}
+		else if (!strcmp(argv[i],"-resm")) {
 			BuildOrder::Optimizer::Creation::restriction_minimum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::restriction_maximum < BuildOrder::Optimizer::Creation::restriction_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::restriction_maximum,BuildOrder::Optimizer::Creation::restriction_minimum);
@@ -207,7 +215,8 @@ int set_options(int argc, char const *argv[])
 			BuildOrder::Optimizer::Creation::restriction_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::restriction_maximum < BuildOrder::Optimizer::Creation::restriction_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::restriction_maximum,BuildOrder::Optimizer::Creation::restriction_minimum);
-		} else if (!strcmp(argv[i],"-dOm")) {
+		}
+		else if (!strcmp(argv[i],"-dOm")) {
 			BuildOrder::Optimizer::Creation::delta_o_minimum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::delta_o_maximum < BuildOrder::Optimizer::Creation::delta_o_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::delta_o_maximum,BuildOrder::Optimizer::Creation::delta_o_minimum);
@@ -215,7 +224,8 @@ int set_options(int argc, char const *argv[])
 			BuildOrder::Optimizer::Creation::delta_o_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::delta_o_maximum <= BuildOrder::Optimizer::Creation::delta_o_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::delta_o_maximum,BuildOrder::Optimizer::Creation::delta_o_minimum);
-		} else if (!strcmp(argv[i],"-dRm")) {
+		}
+		else if (!strcmp(argv[i],"-dRm")) {
 			BuildOrder::Optimizer::Creation::delta_r_minimum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::delta_r_maximum < BuildOrder::Optimizer::Creation::delta_r_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
@@ -223,7 +233,26 @@ int set_options(int argc, char const *argv[])
 			BuildOrder::Optimizer::Creation::delta_r_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::delta_r_maximum <= BuildOrder::Optimizer::Creation::delta_r_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
-		} else if (!strcmp(argv[i],"-Fobjm")) {
+		}
+
+		else if (!strcmp(argv[i],"-obj")) {
+			BuildOrder::Optimizer::Creation::objective_minimum =
+			BuildOrder::Optimizer::Creation::objective_maximum = strtof(argv[i+1],0);
+		} 
+		else if (!strcmp(argv[i],"-res")) {
+			BuildOrder::Optimizer::Creation::restriction_minimum = 
+			BuildOrder::Optimizer::Creation::restriction_maximum = strtof(argv[i+1],0);
+		}
+		else if (!strcmp(argv[i],"-dO")) {
+			BuildOrder::Optimizer::Creation::delta_o_minimum = 
+			BuildOrder::Optimizer::Creation::delta_o_maximum = strtof(argv[i+1],0);
+		}
+		else if (!strcmp(argv[i],"-dR")) {
+			BuildOrder::Optimizer::Creation::delta_r_minimum = 
+			BuildOrder::Optimizer::Creation::delta_r_maximum = strtof(argv[i+1],0);
+		}
+
+		else if (!strcmp(argv[i],"-Fobjm")) {
 			BuildOrder::Optimizer::Fix::objective_minimum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Creation::objective_maximum < BuildOrder::Optimizer::Creation::objective_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::objective_maximum,BuildOrder::Optimizer::Creation::objective_minimum);
@@ -255,7 +284,28 @@ int set_options(int argc, char const *argv[])
 			BuildOrder::Optimizer::Fix::delta_r_maximum = strtof(argv[i+1],0);
 			if (BuildOrder::Optimizer::Fix::delta_r_maximum <= BuildOrder::Optimizer::Fix::delta_r_minimum)
 				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
-		} else if (!strcmp(argv[i],"-std")) {
+		}
+
+		else if (!strcmp(argv[i],"-Fobj")) {
+			BuildOrder::Optimizer::Fix::objective_minimum = 
+			BuildOrder::Optimizer::Fix::objective_maximum = strtof(argv[i+1],0);
+		} else if (!strcmp(argv[i],"-Fres")) {
+			BuildOrder::Optimizer::Fix::restriction_minimum = 
+			BuildOrder::Optimizer::Fix::restriction_maximum = strtof(argv[i+1],0);
+		} else if (!strcmp(argv[i],"-FdO")) {
+			BuildOrder::Optimizer::Fix::delta_o_minimum = 
+			BuildOrder::Optimizer::Fix::delta_o_maximum = strtof(argv[i+1],0);
+		} else if (!strcmp(argv[i],"-FdR")) {
+			BuildOrder::Optimizer::Fix::delta_r_minimum = 
+			BuildOrder::Optimizer::Fix::delta_r_maximum = strtof(argv[i+1],0);
+		}
+
+
+
+
+
+
+		else if (!strcmp(argv[i],"-std")) {
 			if(!strcmp(argv[i+1],"time"))
 			{
 				stdout_time = true;
@@ -321,6 +371,8 @@ void print_help(char const* program_name)
 			  << "  \t\t\t[1, +INF]\tdefault = 20\n"
 			  << "  -r <value>\t\tNumber of runs\n"
 			  << "  \t\t\t[1, +INF]\tdefault = 1\n"
+			  << "  -ls <value>\t\tMaximum number of local search branches\n"
+			  << "  \t\t\t[1, +INF]\tdefault = 5\n"
 			  << "  -c <value>\t\tStop chance\n"
 			  << "  \t\t\t(0, 1]\tdefault = 0.3\n\n"
 		  
