@@ -1,7 +1,7 @@
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
-LD_FLAGS := -std=c++0x -fopenmp -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC 
-CC_FLAGS := -std=c++0x -MMD -fopenmp -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC 
+LD_FLAGS := -std=c++0x -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fopenmp 
+CC_FLAGS := -std=c++0x -MMD -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fopenmp 
 
 #all: LD_FLAGS += -DOPT_NSGA2
 #all: CC_FLAGS += -DOPT_NSGA2
@@ -20,7 +20,7 @@ main: CC_FLAGS += -ggdb
 main: $(OBJ_FILES)
 	g++ $(LD_FLAGS) -o $@ $^
 
-clear:
+clean:
 	rm main debug obj/*
 
 

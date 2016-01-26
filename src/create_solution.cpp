@@ -382,8 +382,13 @@ void BuildOrder::Optimizer::make_valid(Solution& s, Optimizer const& solver, Gam
 		double delta_o = Fix::getDelta_O();
 		double delta_r = Fix::getDelta_R();
 
-		double max_o = obj_m*delta_o*100;
-		double max_r = res_m*delta_r*100;
+		double max_o = obj_m * pow(delta_o,99);
+		double max_r = res_m * pow(delta_r,99);
+
+		if (max_o > max_r)
+			std::swap(max_o, max_r);
+
+
 		while(nextTask(s, init, solver, obj_m, res_m))
 		{
 			if (obj_m < max_o)
