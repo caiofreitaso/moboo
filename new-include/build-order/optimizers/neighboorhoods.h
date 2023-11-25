@@ -6,6 +6,8 @@
 
 namespace BuildOrderOptimizer::Optimizers {
 
+typedef Population (*Neighborhood)(Solution const &);
+
 Population delete_one(Solution const &s);
 Population delete_tail(Solution const &s);
 Population one_swap(Solution const &s);

@@ -371,3 +371,116 @@ BuildOrderOptimizer::Optimizers::Optimizer::initialMap(double o, double r, State
 
     return taskValue;
 }
+
+BuildOrderOptimizer::Data::Contiguous<unsigned>
+BuildOrderOptimizer::Optimizers::Optimizer::toVector(Solution a) const {
+    Data::Contiguous<unsigned> ret;
+    auto &resources = a.final_state.resources;
+
+    ret.reserve(numberObjectives());
+
+    if (time_as_objective) {
+        ret.push_back(a.final_state.time);
+    }
+
+    for (auto &objective : objectives[0].row) {
+        unsigned index = objective.index;
+
+        ret.push_back(resources[index].usable());
+    }
+
+    for (auto &objective : objectives[1].row) {
+        unsigned index = objective.index;
+
+        ret.push_back(resources[index].quantity);
+    }
+
+    for (auto &objective : objectives[2].row) {
+        unsigned index = objective.index;
+
+        ret.push_back(resources[index].used);
+    }
+
+    return ret;
+}
+
+BuildOrderOptimizer::Data::Contiguous<BuildOrderOptimizer::Data::Contiguous<unsigned>>
+BuildOrderOptimizer::Optimizers::Optimizer::toVector(Population a) const {
+    Data::Contiguous<Data::Contiguous<unsigned>> ret;
+
+    ret.reserve(a.size());
+
+    for (auto p : a) {
+        ret.push_back(toVector(p));
+    }
+
+    return ret;
+}
+
+BuildOrderOptimizer::Data::Contiguous<double>
+BuildOrderOptimizer::Optimizers::Optimizer::toDVector(Solution a) const {
+    Data::Contiguous<double> ret;
+    auto &resources = a.final_state.resources;
+
+    ret.reserve(numberObjectives());
+
+    if (time_as_objective) {
+        ret.push_back(a.final_state.time);
+    }
+
+    for (auto &objective : objectives[0].row) {
+        unsigned index = objective.index;
+
+        ret.push_back(resources[index].usable());
+    }
+
+    for (auto &objective : objectives[1].row) {
+        unsigned index = objective.index;
+
+        ret.push_back(resources[index].quantity);
+    }
+
+    for (auto &objective : objectives[2].row) {
+        unsigned index = objective.index;
+
+        ret.push_back(resources[index].used);
+    }
+
+    return ret;
+}
+
+BuildOrderOptimizer::Data::Contiguous<BuildOrderOptimizer::Data::Contiguous<double>>
+BuildOrderOptimizer::Optimizers::Optimizer::toDVector(Population a) const {
+    Data::Contiguous<Data::Contiguous<double>> ret;
+
+    ret.reserve(a.size());
+
+    for (auto &p : a) {
+        ret.push_back(toDVector(p));
+    }
+
+    return ret;
+}
+
+BuildOrderOptimizer::Data::Contiguous<bool>
+BuildOrderOptimizer::Optimizers::Optimizer::objectivesVector() const {
+    Data::Contiguous<bool> min;
+
+    if (time_as_objective) {
+        min.push_back(true);
+    }
+
+    for (auto &objective : objectives[0].row) {
+        min.push_back(objective.value == MINIMIZE);
+    }
+
+    for (auto &objective : objectives[1].row) {
+        min.push_back(objective.value == MINIMIZE);
+    }
+
+    for (auto &objective : objectives[2].row) {
+        min.push_back(objective.value == MINIMIZE);
+    }
+
+    return min;
+}

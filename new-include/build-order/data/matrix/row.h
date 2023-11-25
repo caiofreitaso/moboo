@@ -29,8 +29,19 @@ struct Row {
     begin() {
         return row.begin();
     }
+
     iterator
     end() {
+        return row.end();
+    }
+
+    const_iterator
+    begin() const {
+        return row.begin();
+    }
+
+    const_iterator
+    end() const {
         return row.end();
     }
 

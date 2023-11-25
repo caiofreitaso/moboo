@@ -15,8 +15,8 @@ class MetaGraph {
   public:
     typedef Node<C, T> node;
     typedef Edge<T> edge;
-    typedef typename Contiguous<Matrix::Element<Node<C, T>>>::iterator node_iterator;
-    typedef typename Contiguous<Matrix::Element<Edge<T>>>::iterator edge_iterator;
+    typedef typename Matrix::SparseRow<Node<C, T>>::iterator iterator;
+    typedef typename Matrix::SparseRow<Node<C, T>>::const_iterator const_iterator;
 
   protected:
     unsigned total;
@@ -70,6 +70,26 @@ class MetaGraph {
     unsigned
     size() const {
         return nodes.size();
+    }
+
+    iterator
+    begin() {
+        return nodes.begin();
+    }
+
+    iterator
+    end() {
+        return nodes.end();
+    }
+
+    const_iterator
+    begin() const {
+        return nodes.begin();
+    }
+
+    const_iterator
+    end() const {
+        return nodes.end();
     }
 };
 

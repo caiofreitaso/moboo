@@ -30,7 +30,7 @@ if(RUN_TESTS)
   add_subdirectory(test)
 endif()
 
-file(GLOB_RECURSE moboo_SRC "${PROJECT_SOURCE_DIR}/src/**.cpp")
+file(GLOB_RECURSE moboo_SRC "${PROJECT_SOURCE_DIR}/src/build\-order/**.cpp")
 
 add_executable(mo-boo ${moboo_SRC})
 target_compile_definitions(mo-boo PRIVATE MOBOO_SINGLE_THREADED)
