@@ -5,13 +5,15 @@ std::mt19937 *BuildOrder::Random::r = 0;
 unsigned BuildOrder::rng()
 {
 	static unsigned count = 0;
+	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-	if (Random::r == 0)
-		Random::r = new std::mt19937(std::chrono::system_clock::now().time_since_epoch().count());
+	if (Random::r == 0) {
+		Random::r = new std::mt19937(seed);
+	}
 	
 	if (count == Random::r->state_size)
 	{
-		Random::r->seed(std::chrono::system_clock::now().time_since_epoch().count());
+		Random::r->seed(seed);
 		count = 0;
 	}
 

@@ -1,0 +1,7 @@
+zerglings-full
+zerglings-speed
+zerglings-speedfull
+zerglings-speedfull-atk
+zerglings-speedmax
+zerglings-speedtime
+zerglings-time

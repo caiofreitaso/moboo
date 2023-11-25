@@ -1,0 +1,20 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+Language: Cpp
+ColumnLimit: 120
+AllowShortEnumsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AlwaysBreakTemplateDeclarations: true
+AlwaysBreakAfterReturnType: AllDefinitions
+IncludeBlocks: Regroup
+IncludeCategories:
+- Regex: '^(<|"(gtest|gmock|isl|json)/'
+  Priority: 1
+- Regex: '^<build-order/'
+  Priority: 2
+- Regex: '^<[[:alnum:].]*>'
+  Priority: 9
+- Regex: '.*'
+  Priority: 10
+IndentWrappedFunctionNames: false

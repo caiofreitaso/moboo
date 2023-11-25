@@ -1,0 +1,13 @@
+# Best candidates
+   algorithm stopchance objmultiplier resmultiplier objincrease resincrease Fobjmultiplier Fresmultiplier Fobjincrease Fresincrease nsga2creation
+81     nsga2       0.87          2.73          2.81        2.10        2.44           1.48           1.66         1.63         1.78            34
+83     nsga2       0.75          9.77         10.25        2.02        3.09           6.14           7.06         2.43         3.10            70
+8      nsga2       0.54          9.42          9.83        1.77        1.95           3.20           9.58         1.16         3.55            62
+77     nsga2       0.97          1.01         12.45        1.00        3.38           3.56           4.65         2.95         3.41            27
+86     nsga2       0.64          3.58          4.40        2.06        2.81           2.87           3.17         1.35         1.43            31
+# Best candidates (as commandlines)
+1  -o nsga2 -c 0.87 -nc 34 -obj 2.73 -res 2.81 -dO 2.1 -dR 2.44 -Fobj 1.48 -Fres 1.66 -FdO 1.63 -FdR 1.78
+2  -o nsga2 -c 0.75 -nc 70 -obj 9.77 -res 10.25 -dO 2.02 -dR 3.09 -Fobj 6.14 -Fres 7.06 -FdO 2.43 -FdR 3.1
+3  -o nsga2 -c 0.54 -nc 62 -obj 9.42 -res 9.83 -dO 1.77 -dR 1.95 -Fobj 3.2 -Fres 9.58 -FdO 1.16 -FdR 3.55
+4  -o nsga2 -c 0.97 -nc 27 -obj 1.01 -res 12.45 -dO 1 -dR 3.38 -Fobj 3.56 -Fres 4.65 -FdO 2.95 -FdR 3.41
+5  -o nsga2 -c 0.64 -nc 31 -obj 3.58 -res 4.4 -dO 2.06 -dR 2.81 -Fobj 2.87 -Fres 3.17 -FdO 1.35 -FdR 1.43

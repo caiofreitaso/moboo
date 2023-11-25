@@ -1,7 +1,7 @@
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
-LD_FLAGS := -std=c++0x -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fopenmp 
-CC_FLAGS := -std=c++0x -MMD -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fopenmp 
+LD_FLAGS :=  -fopenmp -std=c++0x -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
+CC_FLAGS :=  -fopenmp -std=c++0x -MMD -D_GLIBC_XX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
 
 #all: LD_FLAGS += -DOPT_NSGA2
 #all: CC_FLAGS += -DOPT_NSGA2

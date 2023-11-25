@@ -1,7 +1,10 @@
 # name             switch    type       values                        [conditions (using R syntax)]
-algorithm          "-o "       c         (nsga2)
+algorithm          "-o "       c         (mograsp)
+localsearchruns    "-ls "      i         (1, 10)
 stopchance         "-c "       r         (0.01, 1.00)
-nsga2creation      "-nc "      i         (1, 100)                      | algorithm %in% c("nsga2", "knee")
+mograspcreation    "-mc "      i         (1, 20)                      | algorithm %in% c("mograsp")
+mograspparents     "-mp "      r         (0.25, 1.00)                  | algorithm %in% c("mograsp")
+mograspchildren    "-mh "      i         (1, 2)                        | algorithm %in% c("mograsp")
 objmultiplier      "-obj "     r         (0.01, 10.00)
 resmultiplier      "-res "     r         (1.01, 15.00)
 objincrease        "-dO "      r         (1.00, 2.60)
@@ -10,4 +13,3 @@ Fobjmultiplier     "-Fobj "    r         (0.01, 7.00)
 Fresmultiplier     "-Fres "    r         (1.01, 10.00)
 Fobjincrease       "-FdO "     r         (1.00, 3.00)
 Fresincrease       "-FdR "     r         (1.20, 4.00)
-

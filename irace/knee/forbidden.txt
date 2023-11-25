@@ -1,0 +1,9 @@
+objmultiplier > resmultiplier
+
+objincrease > resincrease
+
+
+Fobjmultiplier > Fresmultiplier
+
+Fobjincrease > Fresincrease
+!

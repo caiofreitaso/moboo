@@ -2,62 +2,71 @@
 
 bool BuildOrder::Optimizer::Optimizer::dominates(Solution a, Solution b) const
 {
-	contiguous<unsigned> a_obj, b_obj;
-	contiguous<bool> min;
-
-	if (time_as_objective)
+	if (weights.size() && use_weights)
 	{
-		min.push_back(true);
-
-		a_obj.push_back(a.final_state.time);
-		b_obj.push_back(b.final_state.time);
-	}
-
-	for (unsigned i = 0; i < objectives[0].row.size(); i++)
-	{
-		unsigned index = objectives[0].row[i].index;
-
-		a_obj.push_back(a.final_state.resources[index].usable());
-		b_obj.push_back(b.final_state.resources[index].usable());
-		min.push_back(objectives[0].row[i].value == MINIMIZE);
-	}
-
-	for (unsigned i = 0; i < objectives[1].row.size(); i++)
-	{
-		unsigned index = objectives[1].row[i].index;
-
-		a_obj.push_back(a.final_state.resources[index].quantity);
-		b_obj.push_back(b.final_state.resources[index].quantity);
-		min.push_back(objectives[1].row[i].value == MINIMIZE);
-	}
-
-	for (unsigned i = 0; i < objectives[2].row.size(); i++)
-	{
-		unsigned index = objectives[2].row[i].index;
-
-		a_obj.push_back(a.final_state.resources[index].used);
-		b_obj.push_back(b.final_state.resources[index].used);
-		min.push_back(objectives[2].row[i].value == MINIMIZE);
-	}
-
-	bool strictly = false;
-	for (unsigned i = 0; i < a_obj.size(); i++)
-		if (min[i])
+		double a_value = 0, b_value = 0;
+		unsigned w = 0;
+		if (time_as_objective)
 		{
-			if (a_obj[i] <= b_obj[i])
-				strictly = true;
-			else// if (a_obj[i] > b_obj[i])
-				return false;
-		}
-		else
-		{
-			if (a_obj[i] >= b_obj[i])
-				strictly = true;
-			else// if (a_obj[i] < b_obj[i])
-				return false;
+			a_value += weights[w]*a.final_state.time;
+			b_value += weights[w]*b.final_state.time;
+			w++;
 		}
 
-	return strictly;
+		for (unsigned i = 0; i < objectives[0].row.size(); i++)
+		{
+			unsigned index = objectives[0].row[i].index;
+
+			a_value += weights[w]*a.final_state.resources[index].usable();
+			b_value += weights[w]*b.final_state.resources[index].usable();
+			w++;
+		}
+
+		for (unsigned i = 0; i < objectives[1].row.size(); i++)
+		{
+			unsigned index = objectives[1].row[i].index;
+
+			a_value += weights[w]*a.final_state.resources[index].quantity;
+			b_value += weights[w]*b.final_state.resources[index].quantity;
+			w++;
+		}
+
+		for (unsigned i = 0; i < objectives[2].row.size(); i++)
+		{
+			unsigned index = objectives[2].row[i].index;
+
+			a_value += weights[w]*a.final_state.resources[index].used;
+			b_value += weights[w]*b.final_state.resources[index].used;
+			w++;
+		}
+
+		return a_value > b_value;
+	}
+	else
+	{
+		contiguous<unsigned> a_obj = toVector(a);
+		contiguous<unsigned> b_obj = toVector(b);
+		contiguous<bool> min = objectivesVector();
+
+		bool strictly = false;
+		for (unsigned i = 0; i < a_obj.size(); i++)
+			if (min[i])
+			{
+				if (a_obj[i] <= b_obj[i])
+					strictly = true;
+				else// if (a_obj[i] > b_obj[i])
+					return false;
+			}
+			else
+			{
+				if (a_obj[i] >= b_obj[i])
+					strictly = true;
+				else// if (a_obj[i] < b_obj[i])
+					return false;
+			}
+
+		return strictly;
+	}
 }
 
 bool BuildOrder::Optimizer::Optimizer::valid(Solution s) const
@@ -491,6 +500,50 @@ void BuildOrder::Optimizer::initOptimizer(Optimizer& o, char const* f)
 	while(buffer.length() == 0)
 		std::getline(file,buffer);
 
+	//WEIGHTS
+	{
+		o.weights.reserve(o.numberObjectives()+1);
+		o.weights.resize(0);
+
+		unsigned l = 1, s = 0;
+		for (unsigned k = 0; k < o.numberObjectives()+1; k++)
+			if ((buffer[s] >= '0' && buffer[s] <= '9') || buffer[s] == '-')
+			{
+				while (buffer[l] != ' ' && buffer[l] != '\0')
+					l++;
+				ss.str(&buffer[s]);
+				
+				double weight;
+				ss >> weight;
+				ss.clear();
+				
+				o.weights.push_back(weight);
+
+				s = l;
+				while (buffer[s] == ' ')
+				{
+					s++;
+					l++;
+				}
+			}
+			else
+			{
+				if (k > 0)
+				{
+					file.close();
+					return;
+				}
+				else
+					break;
+
+			}
+		if ((buffer[0] >= '0' && buffer[0] <= '9') || buffer[0] == '-')
+			std::getline(file,buffer);
+	}
+
+	while(buffer.length() == 0)
+		std::getline(file,buffer);
+
 	//TIME RESTRICTION
 	{
 		if (buffer[0] != 't')
@@ -566,7 +619,8 @@ contiguous<unsigned> BuildOrder::Optimizer::Optimizer::toVector(Solution a) cons
 
 	ret.reserve(numberObjectives());
 
-	ret.push_back(a.final_state.time);
+	if (time_as_objective)
+		ret.push_back(a.final_state.time);
 
 	for (unsigned i = 0; i < objectives[0].row.size(); i++)
 	{
@@ -602,4 +656,77 @@ contiguous< contiguous<unsigned> > BuildOrder::Optimizer::Optimizer::toVector(Po
 		ret.push_back(toVector(p));
 
 	return ret;
+}
+
+contiguous<double> BuildOrder::Optimizer::Optimizer::toDVector(Solution a) const
+{
+	contiguous<double> ret;
+
+	ret.reserve(numberObjectives());
+
+	if (time_as_objective)
+		ret.push_back(a.final_state.time);
+
+	for (unsigned i = 0; i < objectives[0].row.size(); i++)
+	{
+		unsigned index = objectives[0].row[i].index;
+
+		ret.push_back(a.final_state.resources[index].usable());
+	}
+
+	for (unsigned i = 0; i < objectives[1].row.size(); i++)
+	{
+		unsigned index = objectives[1].row[i].index;
+
+		ret.push_back(a.final_state.resources[index].quantity);
+	}
+
+	for (unsigned i = 0; i < objectives[2].row.size(); i++)
+	{
+		unsigned index = objectives[2].row[i].index;
+
+		ret.push_back(a.final_state.resources[index].used);
+	}
+
+	return ret;
+}
+
+contiguous< contiguous<double> > BuildOrder::Optimizer::Optimizer::toDVector(Population a) const
+{
+	contiguous<contiguous<double> > ret;
+	
+	ret.reserve(a.size());
+
+	for (auto p : a)
+		ret.push_back(toDVector(p));
+
+	return ret;
+}
+
+contiguous<bool> BuildOrder::Optimizer::Optimizer::objectivesVector() const
+{
+	contiguous<bool> min;
+
+	if (time_as_objective)
+		min.push_back(true);
+
+	for (unsigned i = 0; i < objectives[0].row.size(); i++)
+	{
+		unsigned index = objectives[0].row[i].index;
+		min.push_back(objectives[0].row[i].value == MINIMIZE);
+	}
+
+	for (unsigned i = 0; i < objectives[1].row.size(); i++)
+	{
+		unsigned index = objectives[1].row[i].index;
+		min.push_back(objectives[1].row[i].value == MINIMIZE);
+	}
+
+	for (unsigned i = 0; i < objectives[2].row.size(); i++)
+	{
+		unsigned index = objectives[2].row[i].index;
+		min.push_back(objectives[2].row[i].value == MINIMIZE);
+	}
+
+	return min;
 }

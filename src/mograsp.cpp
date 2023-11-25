@@ -7,7 +7,7 @@ BuildOrder::Optimizer::Population BuildOrder::Optimizer::MOGRASP::optimize(GameS
 	for (unsigned ii = 0; ii < iterations; ii++)
 	{
 		//std::cout << "\tMOGRASP: " << ii << "\n";
-		#pragma omp parallel for num_threads(20)
+		#pragma omp parallel for
 		for (unsigned i = 0; i < creation_cycles; i++)
 		{
 			Solution n = create(init, *this, stop_chance);

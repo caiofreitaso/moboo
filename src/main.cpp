@@ -5,6 +5,7 @@
 #include "../include/nsga2.h"
 #include "../include/mograsp.h"
 #include "../include/ants.h"
+#include "../include/weighted-dm.h"
 
 std::chrono::time_point<std::chrono::system_clock> a;
 std::chrono::duration<double> tt;
@@ -18,6 +19,7 @@ unsigned archSize = 20;
 double stop_chance = 0.3;
 unsigned runs = 1;
 unsigned localsearch_runs = 5;
+bool use_weights = false;
 
 double aco_alpha = 0.5;
 double aco_beta = 0.5;
@@ -42,7 +44,6 @@ void print_help(char const* program_name);
 void init(char const *argv[]);
 
 int main(int argc, char const *argv[])
-
 {
 	BuildOrder::Optimizer::Solution test;
 	contiguous<BuildOrder::Optimizer::Population> total;
@@ -55,7 +56,7 @@ int main(int argc, char const *argv[])
 	for (unsigned i = 0; i < runs; i++)
 	{
 		a = std::chrono::system_clock::now();
-		auto lastfront = optm->optimize(state, 5);
+		auto lastfront = optm->optimize(state, iterations);
 		total.push_back(lastfront);
 
 		tt = std::chrono::system_clock::now() - a;
@@ -83,17 +84,37 @@ int main(int argc, char const *argv[])
 
 	front = optm->nonDominated(ret);
 
+
+/*
+	BuildOrder::Optimizer::OriginDM dmkr;
+	BuildOrder::Optimizer::WSM wsm;
+	BuildOrder::Optimizer::WPM wpm;
+	dmkr.target = wsm.target = wpm.target = optm;
+
+	contiguous<contiguous<double> > normalized = wsm.normalize(front);
+	for (unsigned i = 0; i < normalized.size(); i++)
+	{
+		for (unsigned k = 0; k < normalized[i].size(); k++)
+			std::cout << normalized[i][k] << " ";
+		std::cout << "\n";
+	}
+
+	std::cout << "\nBest (Origin): " << dmkr.choose(normalized) << "\n";
+	std::cout << "Best (WSM): " << wsm.choose(normalized) << "\n";
+	std::cout << "Best (WPM): " << wpm.choose(normalized) << "\n\n";
+
+*/
+
 	for (unsigned i = 0; i < front.size(); i++)
 	{
 		if (print_orders)
 		{
-			std::cout << "\n" << (i+1) << "\n";
-			std::cout << "BUILD ORDER: ";
+			std::cout << (i+1) << " BUILD ORDER: ";
 			print(front[i].orders);
 
-			std::cout << "Time: " << front[i].final_state.time << "\n";
-			std::cout << "Minerals: " << front[i].final_state.resources[0].usable() << "\n";
-			std::cout << "Zerglings: " << front[i].final_state.resources[7].usable() << "\n";
+			//std::cout << "Time: " << front[i].final_state.time << "\n";
+			//std::cout << "Minerals: " << front[i].final_state.resources[0].usable() << "\n";
+			//std::cout << "Zerglings: " << front[i].final_state.resources[7].usable() << "\n";
 		}
 
 		if (stdout_filter)
@@ -102,13 +123,15 @@ int main(int argc, char const *argv[])
 			std::cerr << optm->print(front[i]) << "\n";
 		//std::cerr << front[i].final_state.time << " -" << front[i].final_state.resources[0].usable() << "\n";
 	}
+	
+	
 
 	return 0;
 }
 
 int set_options(int argc, char const *argv[])
 {
-	if (argc < 4 || argc % 2 > 0)
+	if (argc < 4)
 	{
 	optionsfail:
 		print_help(argv[0]);
@@ -160,7 +183,13 @@ int set_options(int argc, char const *argv[])
 			stop_chance = strtof(argv[i+1],0);
 			if (stop_chance <= 0 || stop_chance > 1)
 				goto optionsfail;
-		} else if (!strcmp(argv[i],"-an")) {
+		} else if (!strcmp(argv[i],"-W")) {
+			use_weights = true;
+			i--;
+		}
+
+
+		else if (!strcmp(argv[i],"-an")) {
 			creation_cycles = strtol(argv[i+1],0,10);
 			if (creation_cycles <= 0 || opt_type != 2)
 				goto optionsfail;
@@ -180,11 +209,17 @@ int set_options(int argc, char const *argv[])
 			aco_evrate = strtof(argv[i+1],0);
 			if (aco_evrate < 0 || aco_evrate > 1 || opt_type != 2)
 				goto optionsfail;
-		} else if (!strcmp(argv[i],"-nc")) {
+		}
+
+
+		else if (!strcmp(argv[i],"-nc")) {
 			creation_cycles = strtol(argv[i+1],0,10);
 			if (creation_cycles <= 0 || opt_type > 1)
 				goto optionsfail;
-		} else if (!strcmp(argv[i],"-mc")) {
+		}
+
+
+		else if (!strcmp(argv[i],"-mc")) {
 			creation_cycles = strtol(argv[i+1],0,10);
 			if (creation_cycles <= 0 || opt_type < 3)
 				goto optionsfail;
@@ -197,6 +232,8 @@ int set_options(int argc, char const *argv[])
 			if (mograsp_parents < 0 || mograsp_parents > 1 || opt_type < 3)
 				goto optionsfail;
 		}
+
+
 
 		else if (!strcmp(argv[i],"-objm")) {
 			BuildOrder::Optimizer::Creation::objective_minimum = strtof(argv[i+1],0);
@@ -235,6 +272,8 @@ int set_options(int argc, char const *argv[])
 				std::swap(BuildOrder::Optimizer::Creation::delta_r_maximum,BuildOrder::Optimizer::Creation::delta_r_minimum);
 		}
 
+
+
 		else if (!strcmp(argv[i],"-obj")) {
 			BuildOrder::Optimizer::Creation::objective_minimum =
 			BuildOrder::Optimizer::Creation::objective_maximum = strtof(argv[i+1],0);
@@ -251,6 +290,8 @@ int set_options(int argc, char const *argv[])
 			BuildOrder::Optimizer::Creation::delta_r_minimum = 
 			BuildOrder::Optimizer::Creation::delta_r_maximum = strtof(argv[i+1],0);
 		}
+
+
 
 		else if (!strcmp(argv[i],"-Fobjm")) {
 			BuildOrder::Optimizer::Fix::objective_minimum = strtof(argv[i+1],0);
@@ -331,8 +372,10 @@ int set_options(int argc, char const *argv[])
 			}
 			else
 				goto optionsfail;
-		} else if (!strcmp(argv[i],"-P"))
+		} else if (!strcmp(argv[i],"-P")) {
 			print_orders = true;
+			i--;
+		}
 		else if (!strcmp(argv[i],"-f")) {
 			if(!strcmp(argv[i+1],"std"))
 			{
@@ -466,6 +509,7 @@ void init(char const *argv[])
 	}
 
 	optm->stop_chance = 0.3;
+	optm->use_weights = use_weights;
 
 	/////////////////////////////////////////////////////
 	a = std::chrono::system_clock::now();

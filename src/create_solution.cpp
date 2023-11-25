@@ -203,10 +203,12 @@ contiguous<double> BuildOrder::Optimizer::taskWeights(GameState initial,
 	for (unsigned t = 0; t < Rules::tasks.size(); t++)
 		possibles[t] = ::BuildOrder::Objective::possible(t,initial);
 
-	//PREREQUISITE EDGES PRUNING
+	//PRUNE PREREQUISITE EDGES
 	pruneGraph(actual, initial, Rules::RT_PREREQUISITE, Rules::fillsPrerequisite);
-	//BORROW EDGES PRUNING
+	//PRUNE BORROW EDGES
 	pruneGraph(actual, initial, Rules::RT_BORROW, Rules::fillsBorrow);
+	//PRUNE CONSUME EDGES
+	//pruneGraph(actual, initial, Rules::RT_CONSUME, Rules::fillsConsume);
 
 	getValues(actual, initial, weights);
 

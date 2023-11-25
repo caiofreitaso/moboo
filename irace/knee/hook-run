@@ -1,0 +1,70 @@
+#!/bin/bash
+
+EXE=../../main
+HV=../../hv/hv
+
+INSTANCE=$1
+CANDIDATENUM=$2
+
+FIXED_PARAMS="../../sys/zerg ../../state/start $INSTANCE"
+FIXED_PARAMS2="-n one_swap -s 8 -r 1 -i 10 -std fronts -err time"
+
+FILES="output/c${CANDIDATENUM}"
+STDOUT="${FILES}.out"
+STDERR="${FILES}.err"
+
+shift 2 || exit 1
+CAND_PARAMS=$*
+
+error() {
+	echo "`TZ=UTC date`: error: $@" >&2
+	exit 1
+}
+
+echo "$EXE ${FIXED_PARAMS} ${CAND_PARAMS} ${FIXED_PARAMS2} 1> $STDOUT 2> $STDERR" >> run.log
+
+$EXE ${FIXED_PARAMS} ${CAND_PARAMS} ${FIXED_PARAMS2} 1> $STDOUT 2> $STDERR
+
+if [ ! -s "${STDOUT}" ]; then
+	error "${STDOUT}: No such file or directory"
+fi
+
+#Get the number of dimensions
+LINE=$(cat $STDOUT | grep -ve '^$' | head -1)
+declare -a DIMENSIONS
+declare -i i
+i=0
+for x in $LINE
+do
+	DIMENSIONS[$i]="$x"
+	i=$i+1
+done
+
+#Get the maximum time for the instance
+LINE=$(cat $INSTANCE | grep 't')
+declare REFPOINT
+
+#Put maximum time in the reference point
+i=0
+for x in $LINE
+do
+	if [ $i -eq 2 ]; then
+		REFPOINT=$x
+	fi
+	i=$i+1
+done
+
+#Populate the rest of the reference point with 0, for each OTHER dimension
+for (( i=1; i<${#DIMENSIONS[@]}; i++ ))
+do
+	REFPOINT+=" 0"
+done
+
+echo "$HV --quiet -r "$REFPOINT" ${STDOUT} > ${STDOUT}_hv" >> run.log
+
+$HV --quiet -r "$REFPOINT" ${STDOUT} > ${STDOUT}_hv 2>> run.log || error "hypervolume crashed"
+
+COST=$(cat "${STDOUT}_hv" | grep -e '^[0-9]' | cut -f1)
+
+#rm -f ${FILES}*
+echo -$COST

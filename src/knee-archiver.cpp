@@ -15,78 +15,80 @@ void BuildOrder::Optimizer::Knee_Archiver::knees (
 	contiguous<contiguous<unsigned> >& P,
 	contiguous<bool> const& min)
 {
-	if (_v_size != P.size() || _v_obj != min.size())
-	{
-		_v_size = P.size();
-		_v_obj = min.size();
-
-		unsigned denom = _v_size;
-		if (_v_obj > 1)
-			denom /= _v_obj-1;
-
-		double delta = 1;
-		if (_v_obj > 1)
-			delta /= denom;
-		
-		double v;
-		_values.clear();
-		_values.push_back(contiguous<double>(_v_obj, 0));
-		_values[0][0] = 1;
-
-		for (unsigned it = 0, pos = 0; it < _values.size(); it++)
-		{
-			v = _values[it][pos] - delta;
-
-			if (v < 0)
-			{
-				v = 0;
-				pos++;
-			}
-
-			for (unsigned k = pos+1; k < _v_obj; k++)
-			{
-				contiguous<double> n_value(_values[it]);
-				n_value[pos] = v;
-				n_value[k] += delta;
-
-				bool unique = true;
-				for (unsigned j = 0; j < _values.size(); j++)
-				{
-					unsigned count = 0;
-					for (unsigned l = 0; l < _v_obj; l++)
-						if (_values[j][l] == n_value[l])
-							count++;
-
-					if (count == _v_obj)
-					{
-						unique = false;
-						break;
-					}
-				}
-
-				if (unique)
-					_values.push_back(n_value);
-			}
-
-		}
-	}
-	
-
 	for (unsigned I = 0; I < F.size(); I++)
 		if (F[I].size() > 2)
 		{
 			contiguous<double> distance(F[I].size(), 0);
 
-			for (unsigned i = 0; i < F[I].size(); i++)
+			for (unsigned m = 0; m < min.size(); m++)
 			{
-				double value = 0;
-				for (unsigned v = 0; v < _values.size(); v++)
-					for (unsigned m = 0; m < min.size(); m++)
-						value +=_values[v][m];
+				quicksort(F[I], 0, F[I].size()-1, m, P);
 
-				distance[i] = value / _values.size();
+				distance[0] = distance[distance.size()-1] = 1e37;
 			}
 
+			#pragma omp parallel for
+			for (unsigned i = 1; i < F[I].size()-1; i++)
+				if (distance[i] == 0)
+				{
+					unsigned closest, second;
+					double minimum_dist = 1e37, second_dist = 1e37;
+					contiguous<double> A(min.size()), B(min.size());
+
+					for (unsigned j = 0; j < F[I].size(); j++)
+						if (j != i)
+						{
+							contiguous<double> diff(min.size());
+							double dist = 0;
+							
+							for (unsigned m = 0; m < min.size(); m++)
+							{
+								diff[m] = (double)P[F[I][j]][m] - (double)P[F[I][i]][m];
+								dist = diff[m] * diff[m];
+							}
+
+							if (dist < minimum_dist)
+							{
+								closest = j;
+								minimum_dist = dist;
+								A = diff;
+							}
+						}
+
+					for (unsigned j = 0; j < F[I].size(); j++)
+						if (j != i && j != closest)
+						{
+							contiguous<double> diff(min.size());
+							double dist = 0;
+							unsigned eq_count = 0;
+							
+							for (unsigned m = 0; m < min.size(); m++)
+							{
+								diff[m] = (double)P[F[I][j]][m] - (double)P[F[I][i]][m];
+								if (diff[m] > 0 && A[m] > 0 || diff[m] <= 0 && A[m] <= 0)
+									eq_count++;
+								dist = diff[m] * diff[m];
+							}
+
+							if (eq_count < min.size())
+								if (dist < minimum_dist)
+								{
+									second = j;
+									second_dist = dist;
+									B = diff;
+								}
+						}
+
+					double angle = 0;
+					double dot = 0;
+
+					for (unsigned m = 0; m < min.size(); m++)
+						dot += A[m]*B[m];
+
+					angle = dot/(minimum_dist*second_dist);
+					distance[i] = M_PI + M_PI - acos(angle);
+				}
+			
 			quicksort(F[I], 0u, F[I].size()-1, distance);
 		}
 }

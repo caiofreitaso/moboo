@@ -1,2 +1,2 @@
-algorithm	stopchance	objmultiplier	resmultiplier	objincrease	resincrease	Fobjmultiplier	Fresmultiplier	Fobjincrease	Fresincrease	nsga2creation
-nsga2		0.3			2.0				1.5				1.01		1.8			1.5				2.6				1.1				1.4				50
+algorithm	localsearchruns		stopchance	mograspcreation	mograspparents	mograspchildren objmultiplier	resmultiplier	objincrease	resincrease	Fobjmultiplier	Fresmultiplier	Fobjincrease	Fresincrease
+mograsp		5					0.3			5				1				1				2.0				1.5				1.01		1.8			1.5				2.6				1.1				1.4			

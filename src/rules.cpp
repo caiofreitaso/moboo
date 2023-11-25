@@ -16,6 +16,9 @@ bool BuildOrder::Rules::fillsPrerequisite(unsigned task, unsigned resource, unsi
 bool BuildOrder::Rules::fillsBorrow(unsigned task, unsigned resource, unsigned amount)
 { return tasks[task].borrow.get(resource) <= amount; }
 
+bool BuildOrder::Rules::fillsConsume(unsigned task, unsigned resource, unsigned amount)
+{ return tasks[task].consume.get(resource) <= amount; }
+
 void BuildOrder::Rules::init(char const* filename)
 {
 	std::fstream file;
