@@ -49,6 +49,7 @@ namespace BuildOrder
 
 		bool fillsPrerequisite(unsigned task, unsigned resource, unsigned amount);
 		bool fillsBorrow(unsigned task, unsigned resource, unsigned amount);
+		bool fillsConsume(unsigned task, unsigned resource, unsigned amount);
 
 		extern unsigned mean_time;
 

@@ -55,11 +55,13 @@ namespace BuildOrder
 
 		public:
 			bool time_as_objective;
+			bool use_weights;
 			double stop_chance;
 
 			unsigned maximum_time;
 			MatrixRow<Restriction> restrictions[3];
 			MatrixRow<Objective> objectives[3];
+			contiguous<double> weights;
 
 			Population (*neighborhood)(Solution const&);
 
@@ -198,6 +200,10 @@ namespace BuildOrder
 			contiguous<double> initialMap(double,double,GameState) const;
 			contiguous<unsigned> toVector(Solution) const;
 			contiguous<contiguous<unsigned> > toVector(Population) const;
+			contiguous<double> toDVector(Solution) const;
+			contiguous<contiguous<double> > toDVector(Population) const;
+
+			contiguous<bool> objectivesVector() const;
 		};
 
 		void initOptimizer(Optimizer&, char const*);
