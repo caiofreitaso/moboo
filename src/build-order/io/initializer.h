@@ -1,7 +1,7 @@
 #ifndef FILE_INITIALIZER_H
 #define FILE_INITIALIZER_H
 
-#include <build-order/file/read-file.h>
+#include <build-order/io/read-file.h>
 
 void initializeResources(std::fstream &file, std::string &buffer, std::stringstream &sstream);
 void initializeTasks(std::fstream &file, std::string &buffer, std::stringstream &sstream);

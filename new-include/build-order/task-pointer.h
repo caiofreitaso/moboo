@@ -29,7 +29,5 @@ struct TaskPointer {
 
 typedef Data::Contiguous<TaskPointer> BuildOrder;
 
-void print(BuildOrder const &b);
-
 } // namespace BuildOrderOptimizer
 #endif

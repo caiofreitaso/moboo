@@ -1,18 +1,5 @@
 #include <build-order/state/game-state.h>
 
-// BuildOrderOptimizer::State::GameState
-
-void
-BuildOrderOptimizer::State::GameState::print() const {
-    std::cout << "TIME: " << time << "\n";
-
-    for (unsigned i = 0; i < resources.size(); i++) {
-        if (resources[i].usable()) {
-            std::cout << i << ": " << resources[i].usable() << "\n";
-        }
-    }
-}
-
 bool
 BuildOrderOptimizer::State::GameState::hasPrerequisites(unsigned t) const {
     auto task = RULES.tasks[t];

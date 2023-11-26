@@ -1,7 +1,7 @@
-#ifndef ARCHIVERSH
-#define ARCHIVERSH
+#ifndef ARCHIVERS_ARCHIVER_H
+#define ARCHIVERS_ARCHIVER_H
 
-#include <build-order/optimizers/optimizer.h>
+#include <build-order/optimizers/problem.h>
 #include <build-order/solution.h>
 
 namespace BuildOrderOptimizer::Archivers {
@@ -9,73 +9,32 @@ namespace BuildOrderOptimizer::Archivers {
 class Archiver {
   protected:
     Population _data;
-    const Optimizers::Optimizer *_optimizer;
+    const Optimizers::Problem *_problem;
     unsigned _capacity;
 
   public:
-    Archiver() : _optimizer(nullptr), _capacity(0) {}
+    Archiver() : _problem(nullptr), _capacity(0) {}
 
     virtual void filter(Population &) const = 0;
 
-    void
-    setOptimizer(Optimizers::Optimizer *o) {
-        _optimizer = o;
-    }
+    void setProblem(Optimizers::Problem *p);
+    void setCapacity(unsigned c);
 
-    void
-    setCapacity(unsigned c) {
-        _capacity = c;
-    }
+    Population operator()() const;
+    Solution operator[](unsigned i) const;
 
-    Population
-    operator()() const {
-        return _data;
-    }
+    unsigned size() const;
 
-    Solution
-    operator[](unsigned i) const {
-        return _data[i];
-    }
+    Population::const_iterator begin() const;
+    Population::const_iterator end() const;
 
-    unsigned
-    size() const {
-        return _data.size();
-    }
+    virtual void insert(Solution a);
 
-    Population::const_iterator
-    begin() const {
-        return _data.begin();
-    }
-
-    Population::const_iterator
-    end() const {
-        return _data.end();
-    }
-
-    virtual void
-    insert(Solution a) {
-        for (unsigned i = 0; i < size(); i++)
-            if (_data[i] == a)
-                return;
-
-        _data.push_back(a);
-
-        filter(_data);
-
-        if (_data.size() > _capacity)
-            _data.erase(_data.begin() + _capacity, _data.end());
-    }
-
-    void
-    unsafeInsert(Solution a) {
-        _data.push_back(a);
-    }
-
-    void
-    unsafeFilter() {
-        filter(_data);
-    }
+    void unsafeInsert(Solution a);
+    void unsafeFilter();
 };
+
+typedef Archiver *(*ArchiverFactory)(unsigned, Optimizers::Problem *);
 
 } // namespace BuildOrderOptimizer::Archivers
 

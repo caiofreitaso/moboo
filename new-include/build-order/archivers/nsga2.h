@@ -18,7 +18,7 @@ class NSGA2_Archiver : public Archiver {
     void (*dist_func)(Data::Contiguous<Data::Contiguous<unsigned>> &, Data::Contiguous<Data::Contiguous<unsigned>> &,
                       Data::Contiguous<bool> const &);
 
-    NSGA2_Archiver(unsigned c, const Optimizers::Optimizer *o);
+    NSGA2_Archiver(unsigned c, const Optimizers::Problem *p);
 
     virtual void filter(Population &pop) const;
 

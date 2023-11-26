@@ -1,7 +1,7 @@
-#ifndef FILE_READ_FILE_H
-#define FILE_READ_FILE_H
+#ifndef IO_READ_FILE_H
+#define IO_READ_FILE_H
 
-#include <build-order/optimizers/optimizer.h>
+#include <build-order/optimizers/weighted-problem.h>
 #include <build-order/state/game-state.h>
 
 #include <fstream>
@@ -9,7 +9,7 @@
 #include <sstream>
 #include <utility>
 
-namespace BuildOrderOptimizer::File {
+namespace BuildOrderOptimizer::IO {
 
 void ignoreComments(std::fstream &file, std::string &buffer);
 void ignoreComments(std::fstream &file, std::string &buffer, std::stringstream &sstream);
@@ -18,8 +18,8 @@ std::pair<unsigned, unsigned> initializeRelation(std::stringstream &sstream);
 
 void createRules(char const *s);
 State::GameState createState(char const *s);
-void initializeOptimizer(Optimizers::Optimizer &, char const *s);
+void initializeProblem(Optimizers::WeightedProblem &, char const *s);
 
-} // namespace BuildOrderOptimizer::File
+} // namespace BuildOrderOptimizer::IO
 
-#endif // FILE_READ_FILE_H
+#endif // IO_READ_FILE_H

@@ -1,7 +1,7 @@
 #ifndef OPTIMIZERS_FIX_H
 #define OPTIMIZERS_FIX_H
 
-#include <build-order/optimizers/optimizer.h>
+#include <build-order/optimizers/problem.h>
 #include <build-order/solution.h>
 #include <build-order/state/game-state.h>
 
@@ -19,9 +19,9 @@ struct Multipliers {
 
 extern Multipliers MULTIPLIERS;
 
-bool nextTask(Solution &, State::GameState, Optimizers::Optimizer const &, Multipliers);
-void make_valid(Solution &, Optimizers::Optimizer const &, State::GameState const &);
-void trim(Solution &, Optimizers::Optimizer const &, State::GameState const &);
+bool nextTask(Solution &, State::GameState, Optimizers::Problem const &, Multipliers);
+void make_valid(Solution &, Optimizers::Problem const &, State::GameState const &);
+void trim(Solution &, Optimizers::Problem const &, State::GameState const &);
 
 } // namespace BuildOrderOptimizer::Creation
 

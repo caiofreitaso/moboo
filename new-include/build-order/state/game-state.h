@@ -18,8 +18,6 @@ struct GameState {
     Data::Contiguous<Resource> resources;
     EventList tasks;
 
-    void print() const;
-
     int
     usable(unsigned index) const {
         return quantity(index) - resources[index].used;

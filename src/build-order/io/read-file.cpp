@@ -3,14 +3,14 @@
 using namespace BuildOrderOptimizer::State;
 
 void
-BuildOrderOptimizer::File::ignoreComments(std::fstream &file, std::string &buffer) {
+BuildOrderOptimizer::IO::ignoreComments(std::fstream &file, std::string &buffer) {
     do {
         std::getline(file, buffer);
     } while (buffer[0] == '#' || buffer.size() == 0);
 }
 
 void
-BuildOrderOptimizer::File::ignoreComments(std::fstream &file, std::string &buffer, std::stringstream &sstream) {
+BuildOrderOptimizer::IO::ignoreComments(std::fstream &file, std::string &buffer, std::stringstream &sstream) {
     ignoreComments(file, buffer);
 
     sstream.clear();
@@ -18,7 +18,7 @@ BuildOrderOptimizer::File::ignoreComments(std::fstream &file, std::string &buffe
 }
 
 std::pair<unsigned, unsigned>
-BuildOrderOptimizer::File::initializeRelation(std::stringstream &sstream) {
+BuildOrderOptimizer::IO::initializeRelation(std::stringstream &sstream) {
     unsigned index, value;
     long p = (long)sstream.tellg();
 
@@ -41,7 +41,7 @@ BuildOrderOptimizer::File::initializeRelation(std::stringstream &sstream) {
 }
 
 BuildOrderOptimizer::State::GameState
-BuildOrderOptimizer::File::createState(char const *filename) {
+BuildOrderOptimizer::IO::createState(char const *filename) {
     std::fstream file;
     std::string buffer;
     std::stringstream ss;
@@ -56,7 +56,7 @@ BuildOrderOptimizer::File::createState(char const *filename) {
 
     // initial state
     while (!ss.eof()) {
-        auto pair = File::initializeRelation(ss);
+        auto pair = initializeRelation(ss);
         auto current_resource = pair.first;
         auto value = pair.second;
 
@@ -100,7 +100,7 @@ BuildOrderOptimizer::File::createState(char const *filename) {
 }
 
 void
-BuildOrderOptimizer::File::createRules(char const *filename) {
+BuildOrderOptimizer::IO::createRules(char const *filename) {
     std::fstream file;
     std::string buffer;
     std::stringstream sstream;
@@ -131,7 +131,7 @@ BuildOrderOptimizer::File::createRules(char const *filename) {
 }
 
 void
-BuildOrderOptimizer::File::initializeOptimizer(Optimizers::Optimizer &o, char const *f) {
+BuildOrderOptimizer::IO::initializeProblem(Optimizers::WeightedProblem &o, char const *f) {
     std::fstream file;
     std::string buffer;
     std::stringstream ss;

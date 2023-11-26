@@ -2,7 +2,7 @@
 
 using namespace BuildOrderOptimizer::State;
 using namespace BuildOrderOptimizer::Data;
-using namespace BuildOrderOptimizer::File;
+using namespace BuildOrderOptimizer::IO;
 using namespace BuildOrderOptimizer::Rules;
 using ResRule = BuildOrderOptimizer::Rules::Resource;
 

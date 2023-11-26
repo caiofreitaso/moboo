@@ -11,7 +11,7 @@ class Knee_Archiver : public NSGA2_Archiver {
     static unsigned _v_obj;
 
   public:
-    Knee_Archiver(unsigned c, const Optimizers::Optimizer *o);
+    Knee_Archiver(unsigned c, const Optimizers::Problem *p);
 
     static void knees(Data::Contiguous<Data::Contiguous<unsigned>> &, Data::Contiguous<Data::Contiguous<unsigned>> &,
                       Data::Contiguous<bool> const &);

@@ -28,16 +28,16 @@ class AdaptativeGrid_Archiver : public Archiver {
     unsigned getRegionIndex(Data::Contiguous<unsigned>) const;
 
   public:
-    AdaptativeGrid_Archiver(unsigned c, const Optimizers::Optimizer *o, unsigned g = 5)
+    AdaptativeGrid_Archiver(unsigned c, const Optimizers::Problem *p, unsigned g = 5)
         : _gridLevels(g), _uev(c, 0), _region(c, 0) {
         _capacity = c;
         _data.reserve(c + 1);
-        _optimizer = o;
+        _problem = p;
 
-        obj.reserve(o->numberObjectives());
+        obj.reserve(_problem->numberObjectives());
         obj.push_back(true);
 
-        for (auto &type : _optimizer->objectives) {
+        for (auto &type : _problem->objectives) {
             for (auto &objective : type.row) {
                 obj.push_back(objective.value == Optimizers::MINIMIZE);
             }

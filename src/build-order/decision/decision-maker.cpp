@@ -24,8 +24,8 @@ BuildOrderOptimizer::Decision::DecisionMaker::choose(Data::Contiguous<Data::Cont
 
 BuildOrderOptimizer::Data::Contiguous<BuildOrderOptimizer::Data::Contiguous<double>>
 BuildOrderOptimizer::Decision::DecisionMaker::normalize(Population p) const {
-    Data::Contiguous<Data::Contiguous<double>> vec = target->toDVector(p);
-    Data::Contiguous<bool> obj = target->objectivesVector();
+    auto vec = target->problem.toDVector(p);
+    auto obj = target->problem.objectivesVector();
 
     for (unsigned j = 0; j < obj.size(); j++)
         if (obj[j])

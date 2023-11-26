@@ -9,9 +9,9 @@ BuildOrderOptimizer::Creation::Multipliers BuildOrderOptimizer::Creation::MULTIP
 };
 
 void
-BuildOrderOptimizer::Creation::make_valid(Solution &s, Optimizers::Optimizer const &solver,
+BuildOrderOptimizer::Creation::make_valid(Solution &s, Optimizers::Problem const &problem,
                                           State::GameState const &init) {
-    for (unsigned d = 0; !solver.valid(s); d++) {
+    for (unsigned d = 0; !problem.valid(s); d++) {
         if (d > s.orders.size()) {
             s.orders.clear();
             d = 0;
@@ -19,7 +19,7 @@ BuildOrderOptimizer::Creation::make_valid(Solution &s, Optimizers::Optimizer con
             s.orders.erase(s.orders.begin() + s.orders.size() - d, s.orders.end());
         }
 
-        s.update(init, solver.maximum_time);
+        s.update(init, problem.maximum_time);
 
         Multipliers m = MULTIPLIERS;
         m.objective = CREATION.getObjective();
@@ -35,7 +35,7 @@ BuildOrderOptimizer::Creation::make_valid(Solution &s, Optimizers::Optimizer con
             std::swap(max_o, max_r);
         }
 
-        while (nextTask(s, init, solver, m)) {
+        while (nextTask(s, init, problem, m)) {
             if (m.objective < max_o) {
                 m.objective *= delta_o;
             }
@@ -44,7 +44,7 @@ BuildOrderOptimizer::Creation::make_valid(Solution &s, Optimizers::Optimizer con
                 m.restriction *= delta_r;
             }
 
-            if (solver.valid(s)) {
+            if (problem.valid(s)) {
                 break;
             }
         }
@@ -52,12 +52,12 @@ BuildOrderOptimizer::Creation::make_valid(Solution &s, Optimizers::Optimizer con
 }
 
 void
-BuildOrderOptimizer::Creation::trim(Solution &s, Optimizers::Optimizer const &solver, State::GameState const &init) {
+BuildOrderOptimizer::Creation::trim(Solution &s, Optimizers::Problem const &problem, State::GameState const &init) {
     Solution tmp = s;
 
-    while (solver.valid(tmp)) {
+    while (problem.valid(tmp)) {
         s = tmp;
         tmp.orders.pop_back();
-        tmp.update(init, solver.maximum_time);
+        tmp.update(init, problem.maximum_time);
     }
 }

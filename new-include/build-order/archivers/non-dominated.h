@@ -7,15 +7,15 @@ namespace BuildOrderOptimizer::Archivers {
 
 class NonDominated_Archiver : public Archiver {
   public:
-    NonDominated_Archiver(unsigned c, const Optimizers::Optimizer *o) {
+    NonDominated_Archiver(unsigned c, const Optimizers::Problem *p) {
         _capacity = c;
         _data.reserve(c + 1);
-        _optimizer = o;
+        _problem = p;
     }
 
     virtual void
     filter(Population &pop) const {
-        pop = _optimizer->nonDominated(pop);
+        pop = _problem->nonDominated(pop);
     }
 };
 
